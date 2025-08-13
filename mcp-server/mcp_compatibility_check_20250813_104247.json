@@ -1,0 +1,100 @@
+{
+  "timestamp": "2025-08-13T10:42:47.847149",
+  "server_info": {
+    "name": "drawio-mcp-server",
+    "version": "1.0.0"
+  },
+  "test_results": {
+    "protocol_version": {
+      "server_version": "2025-06-18",
+      "official_latest": "2025-06-18",
+      "official_default": "2025-03-26",
+      "is_latest": true,
+      "is_supported": true,
+      "format_valid": true,
+      "score": 100,
+      "success": true
+    },
+    "server_capabilities": {
+      "checks": {
+        "server_name_defined": true,
+        "server_version_defined": true,
+        "tools_defined": true,
+        "tool_schemas_valid": true
+      },
+      "score": 100.0,
+      "success": true
+    },
+    "tool_definitions": {
+      "checks": {
+        "tools_returned": true,
+        "expected_tool_count": true,
+        "all_tools_valid": true
+      },
+      "tool_details": [
+        {
+          "name": "generate-drawio-xml",
+          "has_description": true,
+          "has_schema": true,
+          "schema_valid": true
+        },
+        {
+          "name": "save-drawio-file",
+          "has_description": true,
+          "has_schema": true,
+          "schema_valid": true
+        },
+        {
+          "name": "convert-to-png",
+          "has_description": true,
+          "has_schema": true,
+          "schema_valid": true
+        }
+      ],
+      "tool_count": 3,
+      "score": 100.0,
+      "success": true
+    },
+    "error_handling": {
+      "error_tests": [
+        {
+          "tool": "generate-drawio-xml",
+          "error_caught": true,
+          "expected": "必須パラメータ 'prompt' が不足しています",
+          "actual": "必須パラメータ 'prompt' が不足しています",
+          "message_correct": true
+        },
+        {
+          "tool": "save-drawio-file",
+          "error_caught": true,
+          "expected": "必須パラメータ 'xml_content' が不足しています",
+          "actual": "必須パラメータ 'xml_content' が不足しています",
+          "message_correct": true
+        },
+        {
+          "tool": "convert-to-png",
+          "error_caught": true,
+          "expected": "'file_id' または 'file_path' のいずれかが必要です",
+          "actual": "'file_id' または 'file_path' のいずれかが必要です",
+          "message_correct": true
+        }
+      ],
+      "all_errors_caught": true,
+      "correct_messages": true,
+      "score": 100.0,
+      "success": true
+    }
+  },
+  "overall_assessment": {
+    "total_score": 100.0,
+    "level": "EXCELLENT",
+    "message": "✅ 完全にMCP仕様に準拠しています",
+    "success": true,
+    "category_scores": {
+      "protocol_version": 100,
+      "server_capabilities": 100.0,
+      "tool_definitions": 100.0,
+      "error_handling": 100.0
+    }
+  }
+}

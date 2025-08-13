@@ -1,0 +1,19 @@
+# Core dependencies for MCP Draw.io Server
+# Note: Python 3.10+ required for official MCP library
+mcp[cli]>=1.2.0
+anthropic>=0.25.0
+httpx>=0.25.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+
+# Additional dependencies for official MCP SDK
+anyio>=4.0.0
+
+# Development dependencies (install with: pip install -r requirements-dev.txt)
+# pytest>=7.0.0
+# pytest-asyncio>=0.21.0
+# pytest-cov>=4.0.0
+# black>=23.0.0
+# isort>=5.12.0
+# flake8>=6.0.0
+# mypy>=1.5.0

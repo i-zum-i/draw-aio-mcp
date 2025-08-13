@@ -1,0 +1,45 @@
+{
+  "test_run_info": {
+    "timestamp": "2025-08-13 11:43:04",
+    "python_version": "3.13.6",
+    "working_directory": "C:\\Users\\izumi\\Documents\\生成AI\\draw-aio-mcp\\mcp-server",
+    "environment": {
+      "ANTHROPIC_API_KEY": "設定済み"
+    }
+  },
+  "summary": {
+    "overall_success": false,
+    "total_tests": 2,
+    "successful_tests": 0,
+    "failed_tests": 2,
+    "success_rate": 0.0,
+    "critical_tests": 2,
+    "critical_passed": 0,
+    "critical_failed": 2,
+    "critical_success_rate": 0.0,
+    "total_execution_time": 0.8248453140258789,
+    "overall_execution_time": 2.1704440116882324,
+    "test_results": [
+      {
+        "name": "公式MCPクライアント統合テスト",
+        "script": "test_official_mcp_client_integration.py",
+        "success": false,
+        "execution_time": 0.6626505851745605,
+        "return_code": 1,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\izumi\\Documents\\生成AI\\draw-aio-mcp\\mcp-server\\test_official_mcp_client_integration.py\", line 25, in <module>\n    from mcp.client import ClientSession\nImportError: cannot import name 'ClientSession' from 'mcp.client' (C:\\Users\\izumi\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\mcp\\client\\__init__.py). Did you mean: 'ClientSessionGroup'?\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"C:\\Users\\izumi\\Documents\\生成AI\\draw-aio-mcp\\mcp-server\\test_official_mcp_client_integration.py\", line 37, in <module>\n    print(f\"\\u26a0\\ufe0f MCP client library not available: {e}\")\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnicodeEncodeError: 'cp932' codec can't encode character '\\u26a0' in position 0: illegal multibyte sequence\n",
+        "critical": true
+      },
+      {
+        "name": "Claude Code統合テスト",
+        "script": "test_claude_code_integration.py",
+        "success": false,
+        "execution_time": 0.16219472885131836,
+        "return_code": 1,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\izumi\\Documents\\生成AI\\draw-aio-mcp\\mcp-server\\test_claude_code_integration.py\", line 647, in <module>\n    success = asyncio.run(main())\n  File \"C:\\Users\\izumi\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Users\\izumi\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Users\\izumi\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\izumi\\Documents\\生成AI\\draw-aio-mcp\\mcp-server\\test_claude_code_integration.py\", line 602, in main\n    print(\"\\U0001f680 Claude Code統合テスト開始\")\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnicodeEncodeError: 'cp932' codec can't encode character '\\U0001f680' in position 0: illegal multibyte sequence\n",
+        "critical": true
+      }
+    ]
+  }
+}

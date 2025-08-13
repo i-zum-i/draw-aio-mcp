@@ -1,0 +1,120 @@
+# Docker Compose configuration for MCP Draw.io Server - Development Environment
+# This configuration is optimized for development with hot reloading, debug logging, and local volume mounts
+
+version: '3.8'
+
+services:
+  mcp-server-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+      args:
+        - BUILDTIME=${BUILDTIME:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
+        - VERSION=${VERSION:-dev}
+    image: mcp-drawio-server:dev
+    container_name: mcp-drawio-server-dev
+    
+    # Development environment variables
+    environment:
+      # Required: Anthropic API key
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      
+      # Development-optimized settings
+      - TEMP_DIR=${TEMP_DIR:-/app/temp}
+      - DRAWIO_CLI_PATH=${DRAWIO_CLI_PATH:-drawio}
+      - CACHE_TTL=${CACHE_TTL:-300}  # Shorter cache for development
+      - MAX_CACHE_SIZE=${MAX_CACHE_SIZE:-50}  # Smaller cache for development
+      - FILE_EXPIRY_HOURS=${FILE_EXPIRY_HOURS:-1}  # Shorter expiry for development
+      - CLEANUP_INTERVAL_MINUTES=${CLEANUP_INTERVAL_MINUTES:-5}  # More frequent cleanup
+      - LOG_LEVEL=${LOG_LEVEL:-DEBUG}  # Verbose logging for development
+      - REQUEST_TIMEOUT=${REQUEST_TIMEOUT:-60}  # Shorter timeout for development
+      
+      # Development flags
+      - DEVELOPMENT_MODE=true
+      - DEBUG=true
+      
+      # Server metadata
+      - SERVER_NAME=${SERVER_NAME:-MCP Draw.io Server (Dev)}
+      - SERVER_VERSION=${SERVER_VERSION:-dev}
+      - PROTOCOL_VERSION=${PROTOCOL_VERSION:-2024-11-05}
+    
+    # Volume mounts for development
+    volumes:
+      # Mount source code for hot reloading (read-only for safety)
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
+      
+      # Development data directories
+      - ./temp_dev:/app/temp
+      - ./logs_dev:/app/logs
+      
+      # Configuration files
+      - ./.env:/app/.env:ro
+      - ./pyproject.toml:/app/pyproject.toml:ro
+    
+    # Development ports (if needed for debugging)
+    ports:
+      - "${DEV_PORT:-8080}:8080"  # Optional debug port
+    
+    # No resource limits in development for easier debugging
+    # deploy:
+    #   resources: {}
+    
+    # Health check with shorter intervals for development
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.path.append('/app/src'); from health import HealthChecker; import asyncio; asyncio.run(HealthChecker().get_liveness())"]
+      interval: 15s
+      timeout: 5s
+      start_period: 10s
+      retries: 2
+    
+    # Restart policy for development
+    restart: "no"  # Don't auto-restart in development
+    
+    # Remove security restrictions for development
+    # security_opt: []
+    # read_only: false
+    
+    # Network configuration
+    networks:
+      - mcp-dev-network
+    
+    # Development logging (more verbose)
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"  # Larger log files for development
+        max-file: "5"
+    
+    # Development labels
+    labels:
+      - "com.example.service=mcp-drawio-server"
+      - "com.example.version=dev"
+      - "com.example.environment=development"
+      - "com.example.description=MCP Server for Draw.io diagram generation (Development)"
+
+# Development-specific volumes
+volumes:
+  temp_dev:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./temp_dev
+  
+  logs_dev:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./logs_dev
+
+# Development network
+networks:
+  mcp-dev-network:
+    driver: bridge
+    name: mcp-dev-network
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
