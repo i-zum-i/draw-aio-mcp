@@ -1,8 +1,20 @@
+# Standard MCP Server Initialization Pattern Implementation Guide
+
+## Overview
+
+This document describes the standard MCP server initialization patterns and lifecycle management implemented in the Draw.io MCP Server. The implementation follows best practices from the official MCP Python SDK.
+
+---
+
 # 標準MCPサーバー初期化パターン実装ガイド
 
 ## 概要
 
 このドキュメントは、Draw.io MCP サーバーに実装された標準的なMCPサーバー初期化パターンとライフサイクル管理について説明します。公式MCP Python SDKのベストプラクティスに準拠した実装となっています。
+
+## Implemented Standard Patterns
+
+### 1. Server Metadata and Constants
 
 ## 実装された標準パターン
 

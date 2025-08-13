@@ -1,3 +1,11 @@
+# MCP Draw.io Server Usage Guide
+
+## Overview
+
+The MCP Draw.io Server is a Model Context Protocol (MCP) server that enables natural language diagram generation using Draw.io. It provides three main tools for diagram creation, saving, and image conversion.
+
+---
+
 # MCP Draw.io サーバー 使用ガイド
 
 ## 概要

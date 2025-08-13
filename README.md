@@ -1,334 +1,445 @@
-# AI Diagram Generator
+# AI Diagram Generator MCP Server
 
-An AI-powered web application that automatically generates Draw.io format diagrams from natural language descriptions.
+A Model Context Protocol (MCP) server that generates Draw.io diagrams from natural language descriptions using Claude AI. This server migrates the core functionality of an Express.js web application into a lightweight, containerized MCP server compatible with Claude Code and other MCP clients.
 
-## Project Overview
+## Overview
 
-This system allows users to generate editable .drawio files and PNG images simply by describing diagram content in natural language. Leveraging large language models (Claude), it interprets user intentions and generates appropriate visual representations, significantly reducing the time and effort required to create business and technical diagrams.
+This MCP server provides three main tools for diagram generation:
+- **Generate Draw.io XML** from natural language prompts
+- **Save diagrams** to temporary files with automatic cleanup
+- **Convert Draw.io files to PNG images** using Draw.io CLI
 
-### Key Features
+The server is designed for seamless integration with Claude Code, providing instant diagram generation capabilities through natural language interaction.
 
-- **Natural Language Input**: Generate diagrams by describing content in natural language
-- **Instant Preview**: View generated PNG images immediately in the browser
-- **Editable Files**: Download .drawio files that can be opened and edited in Draw.io
-- **No Login Required**: Anyone can use it immediately without authentication
-- **Responsive Design**: Works on PC, tablet, and smartphone
+## Features
 
-## Project Structure
+### Core Functionality
+- 🎨 **Natural Language to Diagram**: Convert descriptions into valid Draw.io XML
+- 💾 **File Management**: Temporary file storage with automatic cleanup
+- 🖼️ **Image Generation**: PNG export using Draw.io CLI
+- 🔄 **Caching**: Intelligent response caching for improved performance
+- 🛡️ **Error Handling**: Comprehensive error categorization and graceful degradation
 
-TypeScript monorepo structure with integrated frontend and backend management:
+### Architecture
+- 🐍 **Python 3.10+**: Modern Python with async/await support
+- 📦 **Containerized**: Docker-ready for easy deployment
+- 🔧 **MCP Protocol**: Full compliance with Model Context Protocol specifications
+- ⚡ **Performance**: Optimized for low latency and resource efficiency
+- 🧪 **Tested**: Comprehensive test coverage (unit, integration, end-to-end)
 
-```
-draw-aio/
-├── packages/
-│   ├── backend/                    # Express.js API server
-│   │   ├── src/
-│   │   │   ├── controllers/        # API endpoints
-│   │   │   ├── services/           # Business logic
-│   │   │   │   ├── llmService.ts   # Claude LLM integration
-│   │   │   │   ├── fileService.ts  # File management
-│   │   │   │   └── imageService.ts # PNG image generation
-│   │   │   ├── middleware/         # Performance & security
-│   │   │   ├── types/              # TypeScript type definitions
-│   │   │   └── utils/              # Utility functions
-│   │   └── package.json
-│   └── frontend/                   # Next.js React app
-│       ├── src/
-│       │   ├── app/                # Next.js App Router
-│       │   ├── components/         # React components
-│       │   │   ├── MainPage.tsx    # Main screen
-│       │   │   ├── InputForm.tsx   # Input form
-│       │   │   ├── ResultDisplay.tsx # Result display
-│       │   │   └── ErrorMessage.tsx  # Error handling
-│       │   ├── hooks/              # Custom hooks
-│       │   ├── types/              # TypeScript type definitions
-│       │   └── utils/              # Utility functions
-│       └── package.json
-├── scripts/                        # Deployment scripts
-├── docker-compose.yml              # Development Docker settings
-├── docker-compose.prod.yml         # Production Docker settings
-├── Dockerfile                      # Multi-stage Docker build
-└── nginx.conf                      # Reverse proxy settings
-```
+## Quick Start
 
-## Technology Stack
+### Docker (Recommended)
 
-### Frontend
-- **React 18** - UI library
-- **Next.js 14** - React framework (using App Router)
-- **TypeScript** - Type-safe development
-- **CSS-in-JS** - Styling (using styled-jsx)
-
-### Backend
-- **Node.js 18+** - Server runtime
-- **Express.js** - Web framework
-- **TypeScript** - Type-safe development
-
-### AI & Diagram Generation
-- **Claude (Anthropic)** - Natural language processing & XML generation
-- **Draw.io CLI** - PNG image conversion
-- **Zod** - Data validation
-
-### Infrastructure & Deployment
-- **Docker & Docker Compose** - Containerization
-- **Nginx** - Reverse proxy & load balancer
-- **Jest** - Testing framework
-
-## Development Environment Setup
-
-### Prerequisites
-
-- Node.js 18 or higher
-- npm 9 or higher
-- Draw.io CLI (for PNG conversion)
-- Docker & Docker Compose (for production environment)
-
-### Installation Steps
-
-1. **Clone the repository**:
+1. **Build and run with Docker Compose:**
 ```bash
-git clone <repository-url>
-cd draw-aio
+cd mcp-server
+docker-compose up --build
 ```
 
-2. **Install dependencies**:
+2. **Set your API key:**
 ```bash
-npm install
-npm install --workspaces
+export ANTHROPIC_API_KEY=your-claude-api-key-here
 ```
 
-3. **Set up environment variables**:
-```bash
-# Backend environment variables
-cp packages/backend/.env.example packages/backend/.env
-# Edit packages/backend/.env to set ANTHROPIC_API_KEY
+### Manual Installation
 
-# Frontend environment variables
-cp packages/frontend/.env.example packages/frontend/.env
-```
-
-4. **Install Draw.io CLI**:
+1. **Prerequisites:**
 ```bash
+# Python 3.10+
+python --version
+
+# Draw.io CLI (for PNG conversion)
 npm install -g @drawio/drawio-desktop-cli
 ```
 
-5. **Start development server**:
+2. **Setup:**
 ```bash
-npm run dev
+cd mcp-server
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-The application will be accessible at the following URLs:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:3001
-
-### Individual Startup
-
+3. **Configure environment:**
 ```bash
-# Backend only
-npm run dev:backend
-
-# Frontend only
-npm run dev:frontend
+cp .env.example .env
+# Edit .env and add your ANTHROPIC_API_KEY
 ```
 
-## Build and Testing
-
-### Development Build
+4. **Run the server:**
 ```bash
-npm run build
+python -m src.server
 ```
 
-### Production Build
-```bash
-npm run build:production
+## MCP Tools
+
+### 1. generate-drawio-xml
+Generate Draw.io XML diagrams from natural language descriptions.
+
+**Parameters:**
+- `prompt` (string): Natural language description of the diagram
+
+**Response:**
+```json
+{
+  "success": true,
+  "xml_content": "<mxfile>...</mxfile>",
+  "error": null
+}
 ```
 
-### Running Tests
+### 2. save-drawio-file
+Save XML content to temporary files with unique identifiers.
+
+**Parameters:**
+- `xml_content` (string): Valid Draw.io XML content
+- `filename` (string, optional): Custom filename (UUID generated if not provided)
+
+**Response:**
+```json
+{
+  "success": true,
+  "file_id": "uuid-string",
+  "file_path": "/app/temp/uuid.drawio",
+  "expires_at": "2024-01-01T12:00:00Z",
+  "error": null
+}
+```
+
+### 3. convert-to-png
+Convert Draw.io files to PNG images using Draw.io CLI.
+
+**Parameters:**
+- `file_id` (string): File ID from save-drawio-file
+- `file_path` (string, alternative): Direct file path
+
+**Response:**
+```json
+{
+  "success": true,
+  "png_file_id": "uuid-string",
+  "png_file_path": "/app/temp/uuid.png",
+  "base64_content": "base64-encoded-image-data",
+  "error": null
+}
+```
+
+## Integration with Claude Code
+
+### Setup in Claude Code
+
+1. **Add MCP server configuration:**
+```json
+{
+  "mcpServers": {
+    "draw-aio-mcp": {
+      "command": "docker",
+      "args": ["run", "-it", "--rm", "-e", "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}", "draw-aio-mcp:latest"]
+    }
+  }
+}
+```
+
+2. **Use in conversations:**
+```
+Create a flowchart showing the user authentication process with login, validation, and error handling steps.
+```
+
+Claude Code will automatically use the MCP server to generate and display the diagram.
+
+## Development
+
+### Testing
+
 ```bash
 # Run all tests
-npm test
+pytest
 
-# Run tests with coverage
-npm run test:coverage
+# Run with coverage
+pytest --cov=src --cov-report=html
+
+# Run specific test categories
+pytest tests/unit/          # Unit tests
+pytest tests/integration/   # Integration tests
+pytest tests/container/     # Container tests
+```
+
+### Code Quality
+
+```bash
+# Format code
+black src/ tests/
+isort src/ tests/
 
 # Type checking
-npm run typecheck
+mypy src/
 
 # Linting
-npm run lint
+flake8 src/ tests/
 ```
 
-## Production Deployment
+### Docker Development
 
-### Docker Deployment
-
-1. **Production environment setup**:
 ```bash
-# Linux/Mac
-./scripts/setup-production.sh
+# Build optimized image
+docker build -f Dockerfile.optimized -t draw-aio-mcp:latest .
 
-# Windows
-.\scripts\setup-production.ps1
+# Run with development settings
+docker-compose -f docker-compose.dev.yml up
+
+# Run tests in container
+make test-container
 ```
 
-2. **Configure environment variables**:
+## Configuration
+
+### Environment Variables
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `ANTHROPIC_API_KEY` | Claude API key | - | Yes |
+| `TEMP_DIR` | Temporary files directory | `./temp` | No |
+| `DRAWIO_CLI_PATH` | Draw.io CLI executable path | `drawio` | No |
+| `CACHE_TTL` | LLM response cache TTL (seconds) | `3600` | No |
+| `MAX_CACHE_SIZE` | Maximum cache entries | `100` | No |
+| `FILE_EXPIRY_HOURS` | Temporary file expiry | `24` | No |
+| `LOG_LEVEL` | Logging level | `INFO` | No |
+
+### Container Resources
+
+**Minimum Requirements:**
+- Memory: 256MB
+- CPU: 0.5 cores
+- Storage: 1GB (for temporary files)
+
+**Recommended:**
+- Memory: 512MB
+- CPU: 1 core
+- Storage: 2GB
+
+## Project Structure
+
+```
+mcp-server/
+├── src/                           # Source code
+│   ├── __init__.py
+│   ├── server.py                  # Main MCP server implementation
+│   ├── config.py                  # Configuration management
+│   ├── tools.py                   # MCP tool implementations
+│   ├── llm_service.py            # Claude AI integration
+│   ├── file_service.py           # File management service
+│   ├── image_service.py          # PNG generation service
+│   ├── exceptions.py             # Custom exception classes
+│   └── health.py                 # Health check endpoints
+├── tests/                        # Test suite
+│   ├── unit/                     # Unit tests
+│   ├── integration/              # Integration tests
+│   ├── container/                # Container tests
+│   └── fixtures/                 # Test data and utilities
+├── docker/                       # Docker configuration
+│   ├── Dockerfile                # Standard Dockerfile
+│   ├── Dockerfile.optimized      # Production-optimized image
+│   └── docker-compose.*.yml      # Various deployment configs
+├── docs/                         # Documentation
+│   ├── API_DOCUMENTATION.md      # Detailed API reference
+│   ├── DEVELOPER_GUIDE.md        # Development guidelines
+│   └── INSTALLATION_GUIDE.md     # Setup instructions
+├── deploy/                       # Deployment scripts
+├── monitoring/                   # Monitoring configuration
+├── pyproject.toml               # Project configuration
+├── requirements.txt             # Production dependencies
+├── requirements-dev.txt         # Development dependencies
+├── Makefile                     # Build automation
+└── README.md                    # This file
+```
+
+## Deployment
+
+### Production Deployment
+
 ```bash
-# Edit .env file
-ANTHROPIC_API_KEY=your_actual_api_key
-FRONTEND_URL=https://your-domain.com
-NEXT_PUBLIC_API_URL=https://api.your-domain.com
+# Build production image
+make build-production
+
+# Deploy with resource limits
+docker-compose -f docker-compose.prod.yml up -d
+
+# Health check
+curl http://localhost:8000/health
 ```
 
-3. **Execute deployment**:
-```bash
-# Linux/Mac
-./scripts/deploy.sh
+### Scaling
 
-# Windows
-.\scripts\deploy.ps1
-```
+The server is stateless and supports horizontal scaling:
 
-### Available Scripts
-
-#### Development
-- `npm run dev` - Start development server
-- `npm run build` - Development build
-- `npm run test` - Run tests
-- `npm run lint` - Run linting
-
-#### Production
-- `npm run build:production` - Production build
-- `npm run start:production` - Start production server
-- `npm run validate` - Run type checking, linting, and tests together
-- `npm run typecheck` - TypeScript type checking
-
-## Performance Optimization
-
-This project includes the following optimization features:
-
-### Frontend Optimization
-- **Bundle Size Optimization**: Next.js optimization features, webpack bundle analyzer
-- **Image Loading Optimization**: Lazy loading, progressive loading, optimized image components
-- **Responsive Design**: Mobile-first design
-
-### Backend Optimization
-- **API Response Optimization**: LLM response caching, rate limiting, compression
-- **Performance Monitoring**: Response time measurement, memory usage monitoring
-- **Error Handling**: Comprehensive error handling and user-friendly messages
-
-### Security
-- **Security Headers**: Helmet, CORS, CSP configuration
-- **Rate Limiting**: API call restrictions
-- **Input Validation**: Data validation with Zod
-
-### Monitoring & Logging
-- **Health Checks**: Service status monitoring
-- **Performance Logs**: Processing time and error rate recording
-- **Memory Monitoring**: Memory usage tracking
-
-## System Features
-
-### Core Features
-
-1. **Diagram Creation Input**
-   - Natural language diagram content input
-   - Real-time input validation
-   - Processing status visualization
-
-2. **AI Diagram Generation**
-   - Natural language interpretation by Claude LLM
-   - Draw.io compatible XML generation
-   - Error handling and retry functionality
-
-3. **Image Preview**
-   - Instant PNG image generation and display
-   - Optimized image loading
-   - Responsive image display
-
-4. **File Download**
-   - Editable .drawio file provision
-   - Secure download via temporary URL generation
-   - File management and cleanup
-
-### Supported Diagram Types
-
-- Flowcharts
-- Organization charts
-- System architecture diagrams
-- Network diagrams
-- ER diagrams
-- UML diagrams
-- Mind maps
-- Other business diagrams
-
-## API Specification
-
-### Diagram Generation API
-
-**Endpoint**: `POST /api/generate-diagram`
-
-**Request**:
-```json
-{
-  "prompt": "Natural language description of the diagram to create"
-}
-```
-
-**Success Response**:
-```json
-{
-  "status": "success",
-  "imageUrl": "URL of the generated PNG image",
-  "downloadUrl": "Download URL of the generated .drawio file",
-  "message": "Diagram generated successfully"
-}
-```
-
-**Error Response**:
-```json
-{
-  "status": "error",
-  "message": "Detailed error description",
-  "code": "ERROR_CODE"
-}
+```yaml
+# docker-compose.prod.yml
+services:
+  mcp-server:
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Draw.io CLI not found**
+1. **Draw.io CLI not found:**
    ```bash
    npm install -g @drawio/drawio-desktop-cli
    ```
 
-2. **ANTHROPIC_API_KEY not configured**
-   - Set the API key in the `packages/backend/.env` file
+2. **API key issues:**
+   ```bash
+   # Verify key format
+   echo $ANTHROPIC_API_KEY | grep "^sk-ant-"
+   ```
 
-3. **Port already in use**
-   - Default ports (3000, 3001) can be changed via environment variables if in use
+3. **Container memory issues:**
+   ```bash
+   # Increase container memory
+   docker run -m 1g draw-aio-mcp:latest
+   ```
 
-4. **Docker-related issues**
-   - Ensure Docker Desktop is running
-   - Stop existing containers with `docker-compose down`
+### Health Checks
 
-## License
+The server provides comprehensive health monitoring:
 
-This project is released under the MIT License.
+- **GET /health** - Basic health status
+- **GET /health/ready** - Readiness check (all services initialized)
+- **GET /health/live** - Liveness check (server responsive)
+
+### Logs
+
+```bash
+# View server logs
+docker logs mcp-server
+
+# Follow logs in real-time
+docker logs -f mcp-server
+
+# Filter error logs
+docker logs mcp-server 2>&1 | grep ERROR
+```
 
 ## Contributing
 
-Pull requests and issue reports are welcome. Before participating in development, please run:
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
 
-```bash
-npm run validate  # Run type checking, linting, and tests
-```
+### Development Guidelines
+
+- Follow PEP 8 style guidelines
+- Add comprehensive tests for new features
+- Update documentation for API changes
+- Use type hints for all functions
+- Ensure Docker builds pass
+
+## Migration from Express.js
+
+This MCP server migrates core functionality from the original Express.js web application:
+
+### Migrated Components
+- ✅ **LLMService**: Claude AI integration with caching
+- ✅ **FileService**: Temporary file management with cleanup
+- ✅ **ImageService**: Draw.io CLI integration for PNG generation
+- ✅ **Error Handling**: Comprehensive error categorization
+- ✅ **Performance**: Response caching and resource management
+
+### New Features
+- 🆕 **MCP Protocol**: Full compliance with Model Context Protocol
+- 🆕 **Container Ready**: Optimized Docker deployment
+- 🆕 **Claude Code Integration**: Seamless integration with Claude Code
+- 🆕 **Enhanced Monitoring**: Health checks and observability
+
+## License
+
+This project is dual-licensed:
+
+### Personal and Non-Commercial Use
+For personal, educational, research, and non-commercial use, this software is licensed under the **MIT License**. See [LICENSE-MIT](LICENSE-MIT) for details.
+
+### Commercial Use  
+Commercial use requires a separate **Commercial License**. Commercial use includes:
+- Use by for-profit organizations with annual revenue over $10,000 USD
+- Integration into commercial products or services
+- Commercial cloud service deployment
+- Revenue-generating consulting services
+
+**Commercial License Benefits:**
+- ✅ Commercial usage rights
+- ✅ Priority technical support  
+- ✅ Software updates and patches
+- ✅ Customization options
+- ✅ Legal compliance assurance
+
+**To obtain a commercial license:**
+- 📧 Contact: [your-email@domain.com]
+- 📄 See: [LICENSE-COMMERCIAL](LICENSE-COMMERCIAL) for detailed terms
+- 🤝 Custom licensing agreements available
+
+**License Overview:** [LICENSE](LICENSE) | **MIT Terms:** [LICENSE-MIT](LICENSE-MIT) | **Commercial Terms:** [LICENSE-COMMERCIAL](LICENSE-COMMERCIAL)
+
+## Documentation Files
+
+This repository contains comprehensive documentation in Markdown format:
+
+### Root Documentation
+- [README.md](README.md) - Main project documentation (English)
+- [README_ja.md](README_ja.md) - Main project documentation (Japanese)
+- [CLAUDE.md](CLAUDE.md) - Claude Code integration guidance
+
+### MCP Server Documentation
+- [mcp-server/DEPLOYMENT.md](mcp-server/DEPLOYMENT.md) - Deployment guide (English/Japanese)
+- [mcp-server/MCP_MIGRATION_SUMMARY.md](mcp-server/MCP_MIGRATION_SUMMARY.md) - Migration summary (English/Japanese)
+
+#### Core Documentation (`mcp-server/docs/`)
+- [API_DOCUMENTATION.md](mcp-server/docs/API_DOCUMENTATION.md) - Complete API reference (English/Japanese)
+- [DEVELOPER_GUIDE.md](mcp-server/docs/DEVELOPER_GUIDE.md) - Development guidelines (English/Japanese)
+- [INSTALLATION_GUIDE.md](mcp-server/docs/INSTALLATION_GUIDE.md) - Installation instructions (English/Japanese)
+- [MCP_SERVER_USAGE_GUIDE.md](mcp-server/docs/MCP_SERVER_USAGE_GUIDE.md) - Usage guide (English/Japanese)
+- [README.md](mcp-server/docs/README.md) - Documentation overview (English/Japanese)
+
+#### Integration & Testing (`mcp-server/docs/`)
+- [CLAUDE_CODE_INTEGRATION.md](mcp-server/docs/CLAUDE_CODE_INTEGRATION.md) - Claude Code integration (English/Japanese)
+- [MCP_CLIENT_INTEGRATION_TESTING.md](mcp-server/docs/MCP_CLIENT_INTEGRATION_TESTING.md) - Integration testing (English/Japanese)
+
+#### Technical Documentation (`mcp-server/docs/`)
+- [API_KEY_VALIDATION.md](mcp-server/docs/API_KEY_VALIDATION.md) - API key validation (English/Japanese)
+- [DEPENDENCY_CHECKING.md](mcp-server/docs/DEPENDENCY_CHECKING.md) - Dependency checking (English/Japanese)
+- [PROTOCOL_VERSION_VALIDATION.md](mcp-server/docs/PROTOCOL_VERSION_VALIDATION.md) - Protocol validation (English/Japanese)
+- [STANDARD_MCP_PATTERNS.md](mcp-server/docs/STANDARD_MCP_PATTERNS.md) - MCP patterns (English/Japanese)
+
+### Test Documentation
+- [mcp-server/tests/INTEGRATION_TEST_SUMMARY.md](mcp-server/tests/INTEGRATION_TEST_SUMMARY.md) - Integration test summary (English/Japanese)
+- [mcp-server/tests/UNIT_TEST_SUMMARY.md](mcp-server/tests/UNIT_TEST_SUMMARY.md) - Unit test summary (English/Japanese)
+- [mcp-server/tests/container/TASK_17_COMPLETION_SUMMARY.md](mcp-server/tests/container/TASK_17_COMPLETION_SUMMARY.md) - Container test completion
+
+### Source Documentation
+- [mcp-server/src/README_TOOL.md](mcp-server/src/README_TOOL.md) - Tool implementation guide (English/Japanese)
+
+### Infrastructure & Examples
+- [mcp-server/infrastructure/examples/sample-project/README.md](mcp-server/infrastructure/examples/sample-project/README.md) - Sample project
+- [mcp-server/.pytest_cache/README.md](mcp-server/.pytest_cache/README.md) - Pytest cache information
+
+### Performance & Reports
+- [mcp-server/reports/benchmarks/performance-results.md](mcp-server/reports/benchmarks/performance-results.md) - Performance benchmarks
+
+### Project Specifications
+- [.kiro/specs/mcp-server-migration/design.md](.kiro/specs/mcp-server-migration/design.md) - Migration design
+- [.kiro/specs/mcp-server-migration/requirements.md](.kiro/specs/mcp-server-migration/requirements.md) - Requirements specification
+- [.kiro/specs/mcp-server-migration/tasks.md](.kiro/specs/mcp-server-migration/tasks.md) - Task breakdown
 
 ## Support
 
-For technical questions and bug reports, please use the GitHub Issues page.
-
-## Language Support
-
-- **English**: This README
-- **Japanese**: See [README_ja.md](./README_ja.md) for Japanese documentation
+- **Issues**: [GitHub Issues](https://github.com/your-org/draw-aio-mcp/issues)
+- **Documentation**: [docs/](docs/)
+- **API Reference**: [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md)

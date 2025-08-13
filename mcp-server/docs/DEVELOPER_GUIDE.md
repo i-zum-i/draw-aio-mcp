@@ -1,21 +1,21 @@
-# MCP Draw.io サーバー 開発者ガイド
+# MCP Draw.io Server Developer Guide
 
-## 概要
+## Overview
 
-このガイドは、MCP Draw.io サーバーのコードベースに貢献、拡張、または理解したい開発者向けの包括的な情報を提供します。開発環境のセットアップ、テスト手順、コードアーキテクチャ、貢献ガイドラインをカバーしています。
+This guide provides comprehensive information for developers who want to contribute to, extend, or understand the MCP Draw.io Server codebase. It covers development environment setup, testing procedures, code architecture, and contribution guidelines.
 
-## 目次
+## Table of Contents
 
-- [開発環境セットアップ](#開発環境セットアップ)
-- [プロジェクト構造](#プロジェクト構造)
-- [アーキテクチャ概要](#アーキテクチャ概要)
-- [テストフレームワーク](#テストフレームワーク)
-- [コード標準](#コード標準)
-- [貢献ガイドライン](#貢献ガイドライン)
-- [デバッグとトラブルシューティング](#デバッグとトラブルシューティング)
-- [パフォーマンス最適化](#パフォーマンス最適化)
-- [セキュリティ考慮事項](#セキュリティ考慮事項)
-- [リリースプロセス](#リリースプロセス)
+- [Development Environment Setup](#development-environment-setup)
+- [Project Structure](#project-structure)
+- [Architecture Overview](#architecture-overview)
+- [Testing Framework](#testing-framework)
+- [Code Standards](#code-standards)
+- [Contribution Guidelines](#contribution-guidelines)
+- [Debugging and Troubleshooting](#debugging-and-troubleshooting)
+- [Performance Optimization](#performance-optimization)
+- [Security Considerations](#security-considerations)
+- [Release Process](#release-process)
 
 ## Development Environment Setup
 
@@ -1193,3 +1193,1201 @@ docker-compose -f docker-compose.prod.yml up -d
 ---
 
 *This developer guide is maintained by the project contributors and updated with each release.*
+
+---
+
+# MCP Draw.io サーバー 開発者ガイド
+
+## 概要
+
+このガイドは、MCP Draw.io サーバーのコードベースに貢献、拡張、または理解したい開発者向けの包括的な情報を提供します。開発環境のセットアップ、テスト手順、コードアーキテクチャ、貢献ガイドラインをカバーしています。
+
+## 目次
+
+- [開発環境セットアップ](#開発環境セットアップ)
+- [プロジェクト構造](#プロジェクト構造)
+- [アーキテクチャ概要](#アーキテクチャ概要)
+- [テストフレームワーク](#テストフレームワーク)
+- [コード標準](#コード標準)
+- [貢献ガイドライン](#貢献ガイドライン)
+- [デバッグとトラブルシューティング](#デバッグとトラブルシューティング)
+- [パフォーマンス最適化](#パフォーマンス最適化)
+- [セキュリティ考慮事項](#セキュリティ考慮事項)
+- [リリースプロセス](#リリースプロセス)
+
+## 開発環境セットアップ
+
+### 前提条件
+
+- **Python 3.10+** - MCPサーバーに必要
+- **Node.js 18+** - Draw.io CLIに必要
+- **Docker** - コンテナ化された開発・テストに必要
+- **Git** - バージョン管理用
+
+### クイックセットアップ
+
+1. **リポジトリのクローン**
+   ```bash
+   git clone <repository-url>
+   cd mcp-server
+   ```
+
+2. **Python仮想環境の作成**
+   ```bash
+   python -m venv venv
+   
+   # Windows
+   venv\Scripts\activate
+   
+   # Linux/Mac
+   source venv/bin/activate
+   ```
+
+3. **依存関係のインストール**
+   ```bash
+   pip install -r requirements-dev.txt
+   ```
+
+4. **Draw.io CLIのインストール**
+   ```bash
+   npm install -g @drawio/drawio-desktop-cli
+   ```
+
+5. **環境の設定**
+   ```bash
+   cp .env.example .env
+   # .envを編集してAnthropic APIキーを追加
+   ```
+
+6. **セットアップの確認**
+   ```bash
+   python run_unit_tests.py
+   ```
+
+### 開発依存関係
+
+プロジェクトでは複数の開発ツールを使用します：
+
+```bash
+# コア依存関係
+pip install -r requirements.txt
+
+# 開発依存関係
+pip install -r requirements-dev.txt
+```
+
+主な開発パッケージ：
+- `pytest` - テストフレームワーク
+- `pytest-cov` - カバレッジレポート
+- `pytest-asyncio` - 非同期テストサポート
+- `black` - コードフォーマット
+- `flake8` - リント
+- `mypy` - 型チェック
+- `pre-commit` - Gitフック
+
+### IDE設定
+
+#### VS Code設定
+
+推奨拡張機能：
+- Python
+- Pylance
+- Python Docstring Generator
+- GitLens
+- Docker
+
+ワークスペース設定 (`.vscode/settings.json`)：
+```json
+{
+  "python.defaultInterpreterPath": "./venv/bin/python",
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.formatting.provider": "black",
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["tests/"],
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    ".pytest_cache": true,
+    ".coverage": true,
+    "htmlcov": true
+  }
+}
+```
+
+#### PyCharm設定
+
+1. Python インタープリターを仮想環境に設定
+2. テストランナーとして pytest を有効化
+3. コードスタイルを Black フォーマッターに設定
+4. mypy で型チェックを有効化
+
+## プロジェクト構造
+
+```
+mcp-server/
+├── src/                          # ソースコード
+│   ├── __init__.py
+│   ├── server.py                 # MCPサーバー実装
+│   ├── tools.py                  # MCPツール定義
+│   ├── llm_service.py           # Claude API統合
+│   ├── file_service.py          # ファイル管理
+│   ├── image_service.py         # PNG変換
+│   ├── exceptions.py            # カスタム例外
+│   ├── config.py                # 設定管理
+│   └── health.py                # ヘルスチェックエンドポイント
+├── tests/                        # テストスイート
+│   ├── unit/                    # ユニットテスト
+│   ├── integration/             # 統合テスト
+│   ├── container/               # コンテナテスト
+│   ├── fixtures/                # テストデータとユーティリティ
+│   └── conftest.py              # Pytest設定
+├── docs/                         # ドキュメント
+│   ├── API_DOCUMENTATION.md     # APIリファレンス
+│   ├── DEVELOPER_GUIDE.md       # このファイル
+│   ├── INSTALLATION_GUIDE.md    # インストール手順
+│   └── MCP_SERVER_USAGE_GUIDE.md # 使用ガイド
+├── docker/                       # Docker設定
+│   ├── Dockerfile               # マルチステージビルド
+│   ├── build.sh                 # ビルドスクリプト
+│   └── README.md                # Dockerドキュメント
+├── config/                       # 設定ファイル
+│   └── fluent-bit.conf          # ログ設定
+├── requirements.txt              # 本番依存関係
+├── requirements-dev.txt          # 開発依存関係
+├── pyproject.toml               # プロジェクト設定
+├── Makefile                     # ビルド自動化
+├── docker-compose.yml           # 開発環境
+├── docker-compose.prod.yml      # 本番環境
+└── README.md                    # プロジェクト概要
+```
+
+### 主要ファイルとディレクトリ
+
+#### ソースコード (`src/`)
+
+- **`server.py`** - MCP SDKを使用したメインMCPサーバー実装
+- **`tools.py`** - MCPツールの定義と実装
+- **`llm_service.py`** - キャッシュとエラーハンドリングを備えたClaude API統合
+- **`file_service.py`** - 自動クリーンアップ機能付き一時ファイル管理
+- **`image_service.py`** - PNG変換のためのDraw.io CLI統合
+- **`exceptions.py`** - エラーコード付きカスタム例外クラス
+- **`config.py`** - 設定管理と検証
+- **`health.py`** - 監視用ヘルスチェックエンドポイント
+
+#### テスト (`tests/`)
+
+- **`unit/`** - 個別コンポーネントのユニットテスト
+- **`integration/`** - コンポーネント間相互作用の統合テスト
+- **`container/`** - Dockerコンテナ検証テスト
+- **`fixtures/`** - 共有テストデータとユーティリティ
+- **`conftest.py`** - Pytest設定とフィクスチャ
+
+#### ドキュメント (`docs/`)
+
+- **`API_DOCUMENTATION.md`** - 完全なAPIリファレンス
+- **`DEVELOPER_GUIDE.md`** - 開発・貢献ガイド
+- **`INSTALLATION_GUIDE.md`** - インストールとセットアップ手順
+- **`MCP_SERVER_USAGE_GUIDE.md`** - エンドユーザー使用ガイド
+
+## アーキテクチャ概要
+
+### 高レベルアーキテクチャ
+
+MCP Draw.io サーバーは層状アーキテクチャに従います：
+
+```
+┌─────────────────────────────────────┐
+│           MCPクライアント            │
+│        (Claude Code, など)          │
+└─────────────────┬───────────────────┘
+                  │ MCPプロトコル
+┌─────────────────▼───────────────────┐
+│           MCPサーバー               │
+│         (server.py)                 │
+└─────────────────┬───────────────────┘
+                  │
+┌─────────────────▼───────────────────┐
+│          MCPツール                  │
+│         (tools.py)                  │
+└─────────────────┬───────────────────┘
+                  │
+┌─────────────────▼───────────────────┐
+│        サービス層                   │
+│  ┌─────────────────────────────────┐ │
+│  │      LLMService                 │ │
+│  │   (Claude API)                  │ │
+│  └─────────────────────────────────┘ │
+│  ┌─────────────────────────────────┐ │
+│  │     FileService                 │ │
+│  │  (ファイル管理)                  │ │
+│  └─────────────────────────────────┘ │
+│  ┌─────────────────────────────────┐ │
+│  │    ImageService                 │ │
+│  │  (PNG変換)                      │ │
+│  └─────────────────────────────────┘ │
+└─────────────────────────────────────┘
+```
+
+### コンポーネントの責務
+
+#### MCPサーバー (`server.py`)
+- MCPプロトコルの実装
+- クライアント接続とリクエストの処理
+- 適切なハンドラーへのツール呼び出しのルーティング
+- サーバーライフサイクルとヘルスチェックの管理
+
+#### MCPツール (`tools.py`)
+- 3つの主要ツールの定義：generate-drawio-xml、save-drawio-file、convert-to-png
+- 入力検証とサニタイゼーション
+- サービス層呼び出しの調整
+- MCP標準に従ったレスポンスのフォーマット
+
+#### サービス層
+- **LLMService**: Claude API統合、キャッシュ、XML検証
+- **FileService**: 一時ファイル管理、クリーンアップ、メタデータ追跡
+- **ImageService**: Draw.io CLI統合、PNG変換、フォールバック処理
+
+### デザインパターン
+
+#### シングルトンパターン
+- **FileService** はシングルトンパターンを使用して単一インスタンスを保証
+- 複数のクリーンアップスケジューラを防ぎ、一貫した状態を確保
+
+#### ファクトリパターン
+- サービスの初期化はファクトリメソッドを使用
+- モックサービスによる簡単なテストを可能にする
+
+#### ストラテジーパターン
+- 異なるエラータイプに対するエラーハンドリング戦略
+- Draw.io CLIが利用できない場合のフォールバック戦略
+
+#### オブザーバーパターン
+- ファイルクリーンアップスケジューラがファイル期限切れを観察
+- ヘルスチェックがサービス状態を観察
+
+### データフロー
+
+#### XML生成フロー
+1. クライアントが`generate-drawio-xml`ツールにプロンプトを送信
+2. ツールが入力を検証・サニタイゼーション
+3. LLMServiceが既存結果のキャッシュをチェック
+4. キャッシュされていない場合、LLMServiceがClaude APIを呼び出し
+5. レスポンスが適切なDraw.io XMLとして検証
+6. 結果がキャッシュされクライアントに返される
+
+#### ファイル保存フロー
+1. クライアントが`save-drawio-file`ツールにXMLコンテンツを送信
+2. ツールがXML構造を検証
+3. FileServiceが一意のファイルIDを生成
+4. XMLが一時ファイルに書き込まれる
+5. ファイルメタデータが追跡のため保存
+6. ファイルIDとメタデータがクライアントに返される
+
+#### PNG変換フロー
+1. クライアントが`convert-to-png`ツールにファイルIDを送信
+2. ツールがファイルIDをファイルパスに解決
+3. ImageServiceがDraw.io CLIの利用可能性をチェック
+4. 利用可能な場合、CLIが.drawioをPNGに変換
+5. PNGファイルがFileServiceに登録
+6. PNGファイル情報がクライアントに返される
+
+## テストフレームワーク
+
+### テスト構造
+
+プロジェクトでは包括的なテストスイートでpytestを使用：
+
+```
+tests/
+├── unit/                    # ユニットテスト（高速、分離）
+│   ├── test_llm_service.py
+│   ├── test_file_service.py
+│   ├── test_image_service.py
+│   └── test_mock_strategies.py
+├── integration/             # 統合テスト（やや低速、現実的）
+│   ├── test_mcp_tools.py
+│   └── test_end_to_end.py
+├── container/               # コンテナテスト（最も低速、完全環境）
+│   ├── test_docker_build.py
+│   └── test_container_runtime.py
+├── fixtures/                # 共有テストデータ
+│   ├── sample_xml.py
+│   └── sample_prompts.py
+└── conftest.py             # Pytest設定
+```
+
+### テスト実行
+
+#### ユニットテスト（高速）
+```bash
+# 全ユニットテスト実行
+python run_unit_tests.py
+
+# 特定のサービステスト実行
+python run_unit_tests.py --service llm
+python run_unit_tests.py --service file
+
+# カバレッジ付き実行
+python run_unit_tests.py --coverage
+
+# HTMLカバレッジレポート生成
+python run_unit_tests.py --html-coverage
+```
+
+#### 統合テスト
+```bash
+# 統合テスト実行
+python -m pytest tests/integration/ -v
+
+# APIキー付き実行（完全テスト用）
+ANTHROPIC_API_KEY=your-key python -m pytest tests/integration/ -v
+```
+
+#### コンテナテスト
+```bash
+# コンテナテスト実行（Dockerが必要）
+./run_container_tests.sh
+
+# Windows
+.\run_container_tests.ps1
+
+# Python（クロスプラットフォーム）
+python tests/container/run_container_tests.py
+```
+
+#### 全テスト
+```bash
+# 完全テストスイート実行
+make test
+
+# カバレッジ付き実行
+make test-coverage
+```
+
+### テストカテゴリ
+
+#### ユニットテスト
+- **範囲**: 個別の関数とクラス
+- **速度**: 非常に高速（テストあたり1秒未満）
+- **依存関係**: 外部依存関係をモック
+- **カバレッジ**: LLMService 97%、FileService 82%
+
+#### 統合テスト
+- **範囲**: コンポーネント間相互作用
+- **速度**: 中程度（テストあたり1-10秒）
+- **依存関係**: 制御された入力による実際のサービス
+- **カバレッジ**: エンドツーエンドワークフロー
+
+#### コンテナテスト
+- **範囲**: 完全なコンテナ化環境
+- **速度**: 低速（テストあたり30秒以上）
+- **依存関係**: Docker、完全環境
+- **カバレッジ**: デプロイメントとランタイム検証
+
+### モック戦略
+
+#### Claude APIモック
+```python
+@pytest.fixture
+def mock_anthropic_client():
+    with patch('anthropic.Anthropic') as mock_client:
+        mock_instance = AsyncMock()
+        mock_client.return_value = mock_instance
+        
+        # 成功レスポンスを設定
+        mock_response = Mock()
+        mock_response.content = [Mock(text="<mxfile>...</mxfile>")]
+        mock_instance.messages.create.return_value = mock_response
+        
+        yield mock_instance
+```
+
+#### ファイルシステムモック
+```python
+@pytest.fixture
+def temp_directory():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        yield temp_dir
+```
+
+#### 時刻モック
+```python
+@pytest.fixture
+def mock_time():
+    with patch('time.time') as mock_time:
+        mock_time.return_value = 1640995200.0  # 固定タイムスタンプ
+        yield mock_time
+```
+
+### テストの書き方
+
+#### テスト命名規則
+- テストファイル: `test_<component>.py`
+- テストクラス: `Test<Component><Functionality>`
+- テストメソッド: `test_<specific_behavior>`
+
+#### ユニットテスト例
+```python
+class TestLLMServiceXMLGeneration:
+    @pytest.mark.asyncio
+    async def test_generate_drawio_xml_success(self, mock_anthropic_client):
+        """有効なレスポンスでのXML生成成功をテスト。"""
+        # 準備
+        llm_service = LLMService(api_key="test-key")
+        prompt = "シンプルなフローチャートを作成"
+        expected_xml = "<mxfile>...</mxfile>"
+        
+        mock_anthropic_client.messages.create.return_value.content[0].text = expected_xml
+        
+        # 実行
+        result = await llm_service.generate_drawio_xml(prompt)
+        
+        # 検証
+        assert result == expected_xml
+        mock_anthropic_client.messages.create.assert_called_once()
+```
+
+#### 統合テスト例
+```python
+class TestMCPToolsIntegration:
+    @pytest.mark.asyncio
+    async def test_complete_workflow(self):
+        """完全ワークフローをテスト: 生成 -> 保存 -> 変換。"""
+        # XML生成
+        xml_result = await generate_drawio_xml("シンプルなフローチャート")
+        assert xml_result["success"]
+        
+        # ファイル保存
+        save_result = await save_drawio_file(xml_result["xml_content"])
+        assert save_result["success"]
+        
+        # PNG変換
+        png_result = await convert_to_png(file_id=save_result["file_id"])
+        # 注意: CLIが利用できない場合失敗する可能性があるが、適切に処理される
+        assert "cli_available" in png_result
+```
+
+## コード標準
+
+### Pythonスタイルガイド
+
+プロジェクトは一部修正を加えたPEP 8に従います：
+
+#### フォーマット
+- **行長**: 88文字（Blackのデフォルト）
+- **インデント**: 4スペース
+- **クォート**: ダブルクォート推奨
+- **インポート**: isortでソート
+
+#### コードフォーマットツール
+```bash
+# Blackでコードをフォーマット
+black src/ tests/
+
+# インポートをソート
+isort src/ tests/
+
+# flake8でリント
+flake8 src/ tests/
+
+# mypyで型チェック
+mypy src/
+```
+
+#### pre-commitフック
+```bash
+# pre-commitフックをインストール
+pre-commit install
+
+# フックを手動実行
+pre-commit run --all-files
+```
+
+### 型ヒント
+
+全ての関数は型ヒントを含むべきです：
+
+```python
+from typing import Dict, List, Optional, Union, Any
+
+async def generate_drawio_xml(prompt: str) -> Dict[str, Any]:
+    """プロンプトからDraw.io XMLを生成。"""
+    pass
+
+def validate_xml(xml_content: str) -> None:
+    """XMLコンテンツ構造を検証。"""
+    pass
+
+class FileService:
+    def __init__(self, temp_dir: Optional[str] = None) -> None:
+        self.temp_dir = temp_dir or "./temp"
+```
+
+### ドキュメント標準
+
+#### Docstring形式
+Googleスタイルのdocstringを使用：
+
+```python
+def save_drawio_file(xml_content: str, filename: Optional[str] = None) -> str:
+    """
+    Draw.io XMLコンテンツを一時ファイルに保存。
+    
+    Args:
+        xml_content: 保存する有効なDraw.io XMLコンテンツ。
+        filename: 拡張子なしのオプションカスタムファイル名。
+        
+    Returns:
+        保存されたファイルの一意ファイル識別子。
+        
+    Raises:
+        FileServiceError: ファイル保存に失敗した場合。
+        ValueError: XMLコンテンツが無効な場合。
+        
+    Example:
+        >>> file_id = await save_drawio_file("<mxfile>...</mxfile>", "my-diagram")
+        >>> print(f"ID {file_id}で保存されました")
+    """
+```
+
+#### コードコメント
+- 複雑なロジックには控えめにコメントを使用
+- 自己文書化コードを優先
+- "何を"ではなく"なぜ"をコメント
+
+```python
+# 同じプロンプトでの繰り返しAPI呼び出しを避けるため結果をキャッシュ
+cache_key = self._generate_cache_key(prompt)
+if cached_result := self._get_from_cache(cache_key):
+    return cached_result
+```
+
+### エラーハンドリング
+
+#### 例外階層
+```python
+# カスタム例外階層を使用
+class MCPServerError(Exception):
+    """全MCPサーバーエラーの基底例外。"""
+    pass
+
+class LLMError(MCPServerError):
+    """LLMサービス固有のエラー。"""
+    pass
+
+class FileServiceError(MCPServerError):
+    """ファイルサービス固有のエラー。"""
+    pass
+```
+
+#### エラーレスポンス形式
+```python
+def create_error_response(error: Exception, error_code: str) -> Dict[str, Any]:
+    """標準化されたエラーレスポンスを作成。"""
+    return {
+        "success": False,
+        "error": str(error),
+        "error_code": error_code,
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
+```
+
+### ログ標準
+
+#### ログ設定
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+
+# 適切なログレベルを使用
+logger.debug("詳細なデバッグ情報")
+logger.info("プログラム実行に関する一般情報")
+logger.warning("予期しないことが発生")
+logger.error("深刻なエラーが発生")
+logger.critical("非常に深刻なエラーが発生")
+```
+
+#### 構造化ログ
+```python
+logger.info(
+    "ファイル保存成功",
+    extra={
+        "file_id": file_id,
+        "filename": filename,
+        "size_bytes": len(xml_content),
+        "expires_at": expires_at.isoformat()
+    }
+)
+```
+
+## 貢献ガイドライン
+
+### はじめに
+
+1. **リポジトリをフォーク**
+   ```bash
+   git clone https://github.com/your-username/mcp-drawio-server.git
+   cd mcp-drawio-server
+   ```
+
+2. **フィーチャーブランチを作成**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+3. **開発環境をセットアップ**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # またはWindowsでvenv\Scripts\activate
+   pip install -r requirements-dev.txt
+   ```
+
+4. **変更を行う**
+   - コード標準に従う
+   - 新機能にテストを追加
+   - ドキュメントを更新
+
+5. **テストを実行**
+   ```bash
+   python run_unit_tests.py
+   python -m pytest tests/integration/
+   ```
+
+6. **プルリクエストを提出**
+   - 明確な説明を提供
+   - 関連イシューを参照
+   - CIが通ることを確認
+
+### プルリクエストプロセス
+
+#### 提出前
+- [ ] コードがスタイルガイドラインに従っている
+- [ ] テストがローカルで通る
+- [ ] 新機能にテストがある
+- [ ] ドキュメントが更新されている
+- [ ] コミットメッセージが明確
+
+#### PRテンプレート
+```markdown
+## 説明
+変更の簡潔な説明
+
+## 変更のタイプ
+- [ ] バグ修正
+- [ ] 新機能
+- [ ] 破壊的変更
+- [ ] ドキュメント更新
+
+## テスト
+- [ ] ユニットテストが通る
+- [ ] 統合テストが通る
+- [ ] 手動テストが完了
+
+## チェックリスト
+- [ ] コードがスタイルガイドラインに従う
+- [ ] セルフレビュー完了
+- [ ] ドキュメント更新
+- [ ] テストが追加/更新
+```
+
+### コードレビューガイドライン
+
+#### 作成者向け
+- PRは集中的で小さく保つ
+- 明確な説明を提供
+- フィードバックに迅速に対応
+- レビューコメントに基づいて更新
+
+#### レビュー者向け
+- 正確性をレビュー、スタイルは自動化
+- テストカバレッジをチェック
+- ドキュメント更新を確認
+- セキュリティへの影響を考慮
+- フィードバックは建設的に
+
+### イシュー報告
+
+#### バグレポート
+```markdown
+## バグの説明
+バグの明確な説明
+
+## 再現手順
+1. ステップ1
+2. ステップ2
+3. ステップ3
+
+## 期待される動作
+起こるべきこと
+
+## 実際の動作
+実際に起こったこと
+
+## 環境
+- OS: [例：Windows 10、Ubuntu 20.04]
+- Pythonバージョン: [例：3.10.5]
+- Dockerバージョン: [該当する場合]
+
+## 追加コンテキスト
+その他の関連情報
+```
+
+#### 機能リクエスト
+```markdown
+## 機能の説明
+提案機能の明確な説明
+
+## ユースケース
+なぜこの機能が必要なのか？
+
+## 提案解決策
+この機能はどのように動作すべきか？
+
+## 検討した代替案
+考慮した他のアプローチ
+
+## 追加コンテキスト
+その他の関連情報
+```
+
+## デバッグとトラブルシューティング
+
+### 開発デバッグ
+
+#### デバッグログを有効化
+```bash
+export LOG_LEVEL=DEBUG
+export ANTHROPIC_LOG_LEVEL=DEBUG
+python -m src.server
+```
+
+#### Pythonデバッガー
+```python
+import pdb; pdb.set_trace()  # ブレークポイント設定
+
+# またはより良い体験のためipdbを使用
+import ipdb; ipdb.set_trace()
+```
+
+#### VS Codeデバッグ
+ランチ設定 (`.vscode/launch.json`)：
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug MCP Server",
+      "type": "python",
+      "request": "launch",
+      "module": "src.server",
+      "console": "integratedTerminal",
+      "env": {
+        "ANTHROPIC_API_KEY": "your-api-key",
+        "LOG_LEVEL": "DEBUG"
+      }
+    }
+  ]
+}
+```
+
+### 一般的な問題
+
+#### インポートエラー
+```bash
+# PYTHONPATHにsrcディレクトリを含めることを確認
+export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
+
+# または-mフラグを使用
+python -m src.server
+```
+
+#### APIキーの問題
+```bash
+# 環境変数をチェック
+echo $ANTHROPIC_API_KEY
+
+# APIキーの有効性をテスト
+python -c "import anthropic; client = anthropic.Anthropic(); print('APIキーが有効')"
+```
+
+#### Dockerの問題
+```bash
+# Dockerデーモンをチェック
+docker info
+
+# 詳細出力でビルド
+docker build --progress=plain -t mcp-drawio-server .
+
+# コンテナログをチェック
+docker logs <container-id>
+```
+
+### パフォーマンスプロファイリング
+
+#### メモリプロファイリング
+```python
+from memory_profiler import profile
+
+@profile
+def memory_intensive_function():
+    # ここにコード
+    pass
+```
+
+#### CPUプロファイリング
+```python
+import cProfile
+import pstats
+
+# 関数をプロファイル
+cProfile.run('your_function()', 'profile_stats')
+stats = pstats.Stats('profile_stats')
+stats.sort_stats('cumulative').print_stats(10)
+```
+
+#### 非同期プロファイリング
+```python
+import asyncio
+import time
+
+async def profile_async_function():
+    start_time = time.time()
+    result = await your_async_function()
+    end_time = time.time()
+    print(f"関数は{end_time - start_time:.2f}秒かかりました")
+    return result
+```
+
+## パフォーマンス最適化
+
+### キャッシュ戦略
+
+#### LLMレスポンスキャッシュ
+```python
+class LLMService:
+    def __init__(self):
+        self.cache = {}
+        self.cache_ttl = 3600  # 1時間
+        self.max_cache_size = 100
+    
+    def _generate_cache_key(self, prompt: str) -> str:
+        """プロンプトからキャッシュキーを生成。"""
+        return hashlib.md5(prompt.encode()).hexdigest()
+    
+    def _get_from_cache(self, key: str) -> Optional[str]:
+        """有効な場合キャッシュされた結果を取得。"""
+        if key in self.cache:
+            entry = self.cache[key]
+            if time.time() - entry['timestamp'] < self.cache_ttl:
+                return entry['result']
+            else:
+                del self.cache[key]
+        return None
+```
+
+#### ファイルメタデータキャッシュ
+```python
+class FileService:
+    def __init__(self):
+        self.file_metadata = {}  # インメモリメタデータキャッシュ
+    
+    async def get_file_info(self, file_id: str) -> TempFile:
+        """キャッシュ付きでファイル情報を取得。"""
+        if file_id in self.file_metadata:
+            return self.file_metadata[file_id]
+        
+        # キャッシュにない場合はディスクから読み込み
+        file_info = await self._load_file_metadata(file_id)
+        self.file_metadata[file_id] = file_info
+        return file_info
+```
+
+### 非同期最適化
+
+#### 並行操作
+```python
+async def process_multiple_prompts(prompts: List[str]) -> List[Dict]:
+    """複数のプロンプトを並行処理。"""
+    tasks = [generate_drawio_xml(prompt) for prompt in prompts]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    return results
+```
+
+#### 接続プール
+```python
+class LLMService:
+    def __init__(self):
+        # HTTPリクエスト用接続プールを使用
+        self.client = anthropic.Anthropic(
+            max_retries=3,
+            timeout=30.0
+        )
+```
+
+### メモリ管理
+
+#### クリーンアップ戦略
+```python
+class FileService:
+    async def cleanup_expired_files(self):
+        """メモリとディスク領域を解放するため期限切れファイルをクリーンアップ。"""
+        current_time = time.time()
+        expired_files = []
+        
+        for file_id, file_info in self.file_metadata.items():
+            if current_time > file_info.expires_at.timestamp():
+                expired_files.append(file_id)
+        
+        for file_id in expired_files:
+            await self._remove_file(file_id)
+            del self.file_metadata[file_id]
+```
+
+#### メモリ監視
+```python
+import psutil
+import logging
+
+def log_memory_usage():
+    """現在のメモリ使用量をログ出力。"""
+    process = psutil.Process()
+    memory_info = process.memory_info()
+    logging.info(f"メモリ使用量: {memory_info.rss / 1024 / 1024:.2f} MB")
+```
+
+## セキュリティ考慮事項
+
+### 入力検証
+
+#### プロンプトサニタイゼーション
+```python
+def sanitize_prompt(prompt: str) -> str:
+    """ユーザー入力プロンプトをサニタイズ。"""
+    if not isinstance(prompt, str):
+        raise ValueError("プロンプトは文字列である必要があります")
+    
+    # 改行とタブを除く制御文字を削除
+    prompt = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', prompt)
+    
+    # 長さ制限
+    if len(prompt) > 10000:
+        raise ValueError("プロンプトが長すぎます")
+    
+    return prompt.strip()
+```
+
+#### XML検証
+```python
+def validate_drawio_xml(xml_content: str) -> None:
+    """Draw.io XML構造を検証。"""
+    # 必要な要素をチェック
+    required_elements = ['mxfile', 'mxGraphModel', 'root']
+    for element in required_elements:
+        if f'<{element}' not in xml_content:
+            raise ValueError(f"必要な要素が不足: {element}")
+    
+    # 基本XML解析検証
+    try:
+        import xml.etree.ElementTree as ET
+        ET.fromstring(xml_content)
+    except ET.ParseError as e:
+        raise ValueError(f"無効なXML構造: {e}")
+```
+
+### ファイルセキュリティ
+
+#### パストラバーサル防止
+```python
+def sanitize_filename(filename: str) -> str:
+    """パストラバーサルを防ぐためファイル名をサニタイズ。"""
+    # パス区切り文字と危険な文字を削除
+    filename = re.sub(r'[<>:"/\\|?*]', '', filename)
+    filename = filename.replace('..', '')
+    
+    # 長さ制限
+    if len(filename) > 100:
+        filename = filename[:100]
+    
+    return filename
+```
+
+#### 一時ファイルセキュリティ
+```python
+class FileService:
+    def __init__(self, temp_dir: str = None):
+        # セキュアな一時ディレクトリを使用
+        if temp_dir is None:
+            temp_dir = tempfile.mkdtemp(prefix='mcp_drawio_')
+        
+        self.temp_dir = Path(temp_dir)
+        
+        # 制限的な権限を設定
+        self.temp_dir.chmod(0o700)  # 所有者のみ読み取り/書き込み/実行
+```
+
+### APIセキュリティ
+
+#### APIキー管理
+```python
+class LLMService:
+    def __init__(self, api_key: str = None):
+        if api_key is None:
+            api_key = os.getenv('ANTHROPIC_API_KEY')
+        
+        if not api_key:
+            raise LLMError("APIキーが必要です", LLMErrorCode.API_KEY_MISSING)
+        
+        # APIキーをログ出力しない
+        self.client = anthropic.Anthropic(api_key=api_key)
+```
+
+#### リクエスト検証
+```python
+def validate_mcp_request(request: Dict) -> None:
+    """MCPリクエスト構造を検証。"""
+    required_fields = ['method', 'params']
+    for field in required_fields:
+        if field not in request:
+            raise ValueError(f"必要なフィールドが不足: {field}")
+    
+    # メソッド名を検証
+    valid_methods = ['tools/call', 'tools/list']
+    if request['method'] not in valid_methods:
+        raise ValueError(f"無効なメソッド: {request['method']}")
+```
+
+## リリースプロセス
+
+### バージョン管理
+
+#### セマンティックバージョニング
+- **MAJOR**: 破壊的変更
+- **MINOR**: 新機能（後方互換性あり）
+- **PATCH**: バグ修正（後方互換性あり）
+
+#### バージョン更新プロセス
+1. `pyproject.toml`でバージョンを更新
+2. `src/__init__.py`でバージョンを更新
+3. CHANGELOG.mdを更新
+4. gitタグを作成
+5. ビルドして公開
+
+### ビルドプロセス
+
+#### ローカルビルド
+```bash
+# Pythonパッケージビルド
+python -m build
+
+# Dockerイメージビルド
+docker build -t mcp-drawio-server:latest .
+
+# ビルドテスト
+docker run --rm mcp-drawio-server:latest --version
+```
+
+#### 自動ビルド（CI/CD）
+```yaml
+# .github/workflows/build.yml
+name: Build and Test
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: pip install -r requirements-dev.txt
+      - run: python run_unit_tests.py
+      - run: python -m pytest tests/integration/
+  
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: docker build -t mcp-drawio-server .
+      - run: docker run --rm mcp-drawio-server --version
+```
+
+### 品質ゲート
+
+#### リリース前チェックリスト
+- [ ] 全テストが通る
+- [ ] コードカバレッジ > 80%
+- [ ] ドキュメントが更新されている
+- [ ] セキュリティスキャンが通る
+- [ ] パフォーマンスベンチマークが満たされている
+- [ ] Dockerイメージが正常にビルドされる
+- [ ] 統合テストが通る
+
+#### リリース検証
+```bash
+# 完全テストスイート実行
+make test-all
+
+# セキュリティスキャン
+bandit -r src/
+
+# パフォーマンスベンチマーク
+python benchmark/run_benchmarks.py
+
+# Dockerセキュリティスキャン
+docker scan mcp-drawio-server:latest
+```
+
+### デプロイメント
+
+#### 本番デプロイメント
+```bash
+# 本番イメージビルド
+docker build -f Dockerfile.prod -t mcp-drawio-server:prod .
+
+# docker-composeでデプロイ
+docker-compose -f docker-compose.prod.yml up -d
+
+# ヘルスチェック
+curl http://localhost:8000/health
+```
+
+#### ロールバックプロセス
+```bash
+# 前のバージョンにロールバック
+docker-compose -f docker-compose.prod.yml down
+docker tag mcp-drawio-server:v1.0.0 mcp-drawio-server:latest
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+## サポートとリソース
+
+### ドキュメント
+- [APIドキュメント](API_DOCUMENTATION.md)
+- [インストールガイド](INSTALLATION_GUIDE.md)
+- [使用ガイド](MCP_SERVER_USAGE_GUIDE.md)
+- [Claude Code統合](CLAUDE_CODE_INTEGRATION.md)
+
+### 開発ツール
+- [Python仮想環境](https://docs.python.org/3/tutorial/venv.html)
+- [pytestドキュメント](https://docs.pytest.org/)
+- [Dockerドキュメント](https://docs.docker.com/)
+- [MCP SDKドキュメント](https://github.com/modelcontextprotocol/python-sdk)
+
+### コミュニティ
+- バグレポートと機能リクエスト用のGitHub Issues
+- 質問とコミュニティサポート用のGitHub Discussions
+- 貢献用のコードレビュープロセス
+
+### トラブルシューティング
+- 使用ガイドの[トラブルシューティングセクション](MCP_SERVER_USAGE_GUIDE.md#troubleshooting)を確認
+- 詳細なエラー情報のためサーバーログを確認
+- 提供されているデバッグツールとテクニックを使用
+- 使用例についてはテストスイートを参照
+
+---
+
+*この開発者ガイドはプロジェクト貢献者によって維持され、各リリースで更新されます。*

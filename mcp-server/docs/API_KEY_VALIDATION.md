@@ -2,6 +2,12 @@
 
 This document describes the improved API key validation functionality implemented in the MCP Draw.io Server.
 
+---
+
+# APIキー検証
+
+このドキュメントでは、MCP Draw.io サーバーに実装された改良されたAPIキー検証機能について説明します。
+
 ## Overview
 
 The API key validation system provides comprehensive validation of Anthropic API keys including:
@@ -11,6 +17,16 @@ The API key validation system provides comprehensive validation of Anthropic API
 - **Production key validation**: Performs actual API calls to validate real keys
 - **Policy-based decisions**: Allows test keys in development environments
 - **Startup validation**: Validates keys during server initialization
+
+## 概要
+
+APIキー検証システムは、Anthropic APIキーの包括的な検証を提供します：
+
+- **形式検証**: キーが正しい `sk-ant-` 形式に従っていることを確認
+- **テストキー検出**: テスト/偽のキーを適切に識別・処理
+- **本番キー検証**: 実際のAPIコールを実行して実際のキーを検証
+- **ポリシーベースの決定**: 開発環境でテストキーを許可
+- **起動時検証**: サーバー初期化時にキーを検証
 
 ## Key Features
 

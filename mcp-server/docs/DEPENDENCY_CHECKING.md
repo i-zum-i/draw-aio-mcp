@@ -2,6 +2,12 @@
 
 The MCP Draw.io Server includes comprehensive dependency checking functionality to help with setup and troubleshooting.
 
+---
+
+# 依存関係チェック機能
+
+MCP Draw.io サーバーには、セットアップとトラブルシューティングを支援する包括的な依存関係チェック機能が含まれています。
+
 ## Features
 
 ### 1. Startup Dependency Validation
@@ -23,6 +29,28 @@ The MCP Draw.io Server includes comprehensive dependency checking functionality 
 - Step-by-step installation instructions
 - Alternative options when dependencies are unavailable
 - Links to official documentation and download pages
+
+## 機能
+
+### 1. 起動時依存関係検証
+- サーバー起動時に重要な依存関係を自動チェック
+- 重要な依存関係が不足している場合はサーバー起動を防止
+- 明確なエラーメッセージとセットアップガイダンスを提供
+
+### 2. コマンドライン依存関係ツール
+- `--check-dependencies`: 重要な依存関係のみをチェック
+- `--check-all`: すべての依存関係（重要およびオプション）をチェック
+- `--setup-guide`: 包括的なセットアップガイダンスを生成
+
+### 3. 強化されたエラーメッセージ
+- 不足している依存関係の明確な識別
+- 各依存関係の具体的なインストールコマンド
+- 一般的な問題のトラブルシューティングガイダンス
+
+### 4. 自動セットアップガイダンス
+- ステップバイステップのインストール手順
+- 依存関係が利用できない場合の代替オプション
+- 公式ドキュメントとダウンロードページへのリンク
 
 ## Usage
 

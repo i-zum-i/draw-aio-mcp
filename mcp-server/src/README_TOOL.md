@@ -165,3 +165,173 @@ This implementation satisfies the following requirements:
 - `anthropic`: Claude API integration
 - `python-dotenv`: Environment variable management (optional)
 - Standard library modules: `asyncio`, `logging`, `datetime`, `typing`, `re`
+
+---
+
+# generate-drawio-xml MCPツール
+
+このドキュメントでは、`generate-drawio-xml` MCPツールの実装について説明します。
+
+## 概要
+
+`generate-drawio-xml`ツールは、自然言語による説明を、diagrams.netで開くことができる有効なDraw.io XML形式に変換します。フローチャート、システム図、AWSアーキテクチャ図など、さまざまな図表タイプをサポートしています。
+
+## 実装詳細
+
+### ツール関数
+
+```python
+async def generate_drawio_xml(prompt: str) -> Dict[str, Any]
+```
+
+### 入力パラメータ
+
+- **prompt** (文字列、必須): 生成する図表の自然言語による説明
+  - 最小長: 5文字
+  - 最大長: 10,000文字
+  - 空でない文字列である必要があります
+
+### 戻り値形式
+
+```python
+{
+    "success": bool,           # 生成が成功したかどうか
+    "xml_content": str,        # 有効なDraw.io XMLコンテンツ（成功時）
+    "error": str,              # エラーメッセージ（失敗時）
+    "error_code": str,         # プログラムでの処理用の特定のエラーコード（失敗時）
+    "timestamp": str           # 生成のISOタイムスタンプ
+}
+```
+
+### エラーコード
+
+- `INVALID_INPUT`: 入力検証に失敗（空、短すぎる、長すぎるなど）
+- `API_KEY_MISSING`: Anthropic APIキーが設定されていない
+- `CONNECTION_ERROR`: ネットワーク接続の問題
+- `RATE_LIMIT_ERROR`: APIレート制限に達した
+- `QUOTA_EXCEEDED`: API使用量クォータを超過
+- `INVALID_RESPONSE`: Claude APIからの無効な応答
+- `INVALID_XML`: 生成されたXMLが検証に失敗
+- `TIMEOUT_ERROR`: APIリクエストがタイムアウト
+- `UNKNOWN_ERROR`: 予期しないエラーが発生
+
+### 入力検証とサニタイゼーション
+
+ツールは包括的な入力検証を含みます：
+
+1. **型チェック**: 入力が文字列であることを確認
+2. **長さ検証**: 最小（5）および最大（10,000）文字制限を強制
+3. **コンテンツサニタイゼーション**: 自然言語を保持しながら制御文字を削除
+4. **空文字列検出**: 空またはスペースのみの入力を拒否
+
+### MCPツールスキーマ
+
+```json
+{
+    "name": "generate-drawio-xml",
+    "description": "自然言語プロンプトからDraw.io XML図表を生成",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "prompt": {
+                "type": "string",
+                "description": "生成する図表の自然言語による説明",
+                "minLength": 5,
+                "maxLength": 10000
+            }
+        },
+        "required": ["prompt"]
+    }
+}
+```
+
+## 使用例
+
+### 基本的な使用方法
+
+```python
+result = await generate_drawio_xml("ユーザーログインプロセスを示すシンプルなフローチャートを作成")
+
+if result["success"]:
+    print("生成されたXML:", result["xml_content"])
+else:
+    print("エラー:", result["error"])
+    print("エラーコード:", result["error_code"])
+```
+
+### AWSアーキテクチャ図
+
+```python
+result = await generate_drawio_xml("""
+次を含むAWSアーキテクチャ図を作成してください：
+- パブリックサブネットとプライベートサブネットを持つVPC
+- パブリックサブネット内のApplication Load Balancer
+- プライベートサブネット内のEC2インスタンス
+- プライベートサブネット内のRDSデータベース
+- アウトバウンドトラフィック用のNAT Gateway
+""")
+```
+
+### システムアーキテクチャ
+
+```python
+result = await generate_drawio_xml("""
+次を含むマイクロサービスアーキテクチャ図を作成してください：
+- API Gateway
+- ユーザーサービス
+- 注文サービス
+- 決済サービス
+- 各サービス用のデータベース
+- サービス間のメッセージキュー
+""")
+```
+
+## エラーハンドリング
+
+ツールは包括的なエラーハンドリングを実装しています：
+
+1. **入力検証エラー**はキャッチされ、`INVALID_INPUT`コードとともに返されます
+2. **LLMサービスエラー**は分類され、適切なエラーコードとともに返されます
+3. **予期しないエラー**はキャッチされ、`UNKNOWN_ERROR`コードとともに返されます
+4. **すべてのエラーにはデバッグ目的のタイムスタンプが含まれます**
+
+## LLMServiceとの統合
+
+ツールは以下を提供する`LLMService`クラスと統合されています：
+
+- **キャッシュ**: 同じプロンプトはパフォーマンス向上のためキャッシュされた結果を返します
+- **XML検証**: 生成されたXMLはDraw.io互換性について検証されます
+- **エラー分類**: APIエラーは適切に分類され処理されます
+- **AWS図表ルール**: AWSアーキテクチャ図の特別な処理
+
+## テスト
+
+実装には包括的なテストが含まれています：
+
+- **構造テスト**: ツールスキーマと関数シグネチャの検証
+- **入力検証テスト**: すべての検証シナリオのテスト
+- **MCPサーバーテスト**: サーバーリクエスト処理のテスト
+- **統合テスト**: 実際のAPI呼び出しでのテスト（APIキーが必要）
+
+テストの実行：
+
+```bash
+python test_structure.py    # 構造および検証テスト
+python test_mcp_server.py   # MCPサーバー機能テスト
+python test_tool.py         # 完全統合テスト（APIキーが必要）
+```
+
+## 要件コンプライアンス
+
+この実装は以下の要件を満たします：
+
+- **要件1.1**: 自然言語プロンプトから有効なDraw.io XMLを生成
+- **要件1.2**: 将来の参照用にファイルIDを返す（タイムスタンプと成功追跡による）
+- **要件1.3**: 必要な要素のXML構造を検証
+- **要件1.4**: AWS図表生成時にAWS固有の図表ルールを適用
+
+## 依存関係
+
+- `anthropic`: Claude API統合
+- `python-dotenv`: 環境変数管理（オプション）
+- 標準ライブラリモジュール: `asyncio`, `logging`, `datetime`, `typing`, `re`

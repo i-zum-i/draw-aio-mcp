@@ -1,6 +1,16 @@
+# MCP Protocol Version Validation Guide
+
+This document describes the MCP server protocol version validation process and ensuring compatibility with the official MCP specification.
+
+---
+
 # MCP プロトコルバージョン検証ガイド
 
 このドキュメントは、MCPサーバーのプロトコルバージョン検証プロセスと、公式MCP仕様との互換性確保について説明します。
+
+## Overview
+
+Model Context Protocol (MCP) is a standardized communication protocol between AI assistants and tools. This project ensures compatibility with Claude Code and other MCP clients by fully complying with the official MCP specification.
 
 ## 概要
 

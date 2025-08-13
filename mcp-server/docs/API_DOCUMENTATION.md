@@ -1,3 +1,311 @@
+# MCP Draw.io Server API Documentation
+
+## Overview
+
+The MCP Draw.io Server provides three Model Context Protocol (MCP) tools for generating, saving, and converting Draw.io diagrams. This document provides comprehensive API specifications for each tool, including detailed parameters, return values, and error codes.
+
+## Table of Contents
+
+- [Tool Overview](#tool-overview)
+- [generate-drawio-xml](#generate-drawio-xml)
+- [save-drawio-file](#save-drawio-file)
+- [convert-to-png](#convert-to-png)
+- [Error Code Reference](#error-code-reference)
+- [Common Response Patterns](#common-response-patterns)
+- [Usage Examples](#usage-examples)
+
+## Tool Overview
+
+| Tool Name | Purpose | Input | Output |
+|-----------|---------|-------|--------|
+| `generate-drawio-xml` | Generate Draw.io XML from natural language | Text prompt | Draw.io XML content |
+| `save-drawio-file` | Save XML content to temporary files | XML content + optional filename | File ID and metadata |
+| `convert-to-png` | Convert Draw.io files to PNG images | File ID or path | PNG file information |
+
+## generate-drawio-xml
+
+Generates Draw.io XML diagram content from natural language descriptions using Claude AI.
+
+### Tool Schema
+
+```json
+{
+  "name": "generate-drawio-xml",
+  "description": "Generate Draw.io XML diagrams from natural language descriptions",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "prompt": {
+        "type": "string",
+        "description": "Natural language description of the diagram to generate"
+      }
+    },
+    "required": ["prompt"]
+  }
+}
+```
+
+### Parameters
+
+- **prompt** (string, required): Natural language description of the diagram
+  - Must be a non-empty string
+  - Supports complex diagram descriptions including flowcharts, AWS architectures, network diagrams, etc.
+  - Examples: "Create a flowchart for user authentication", "AWS 3-tier architecture with load balancer"
+
+### Response Format
+
+```json
+{
+  "success": true,
+  "xml_content": "<mxfile>...</mxfile>",
+  "error": null
+}
+```
+
+### Response Fields
+
+- **success** (boolean): Indicates if the operation was successful
+- **xml_content** (string): Generated Draw.io XML content (only present when success=true)
+- **error** (string|null): Error message if operation failed
+
+## save-drawio-file
+
+Saves XML content to temporary files with unique identifiers and automatic cleanup.
+
+### Tool Schema
+
+```json
+{
+  "name": "save-drawio-file", 
+  "description": "Save Draw.io XML content to temporary files",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "xml_content": {
+        "type": "string",
+        "description": "Valid Draw.io XML content"
+      },
+      "filename": {
+        "type": "string",
+        "description": "Optional custom filename (UUID generated if not provided)"
+      }
+    },
+    "required": ["xml_content"]
+  }
+}
+```
+
+### Parameters
+
+- **xml_content** (string, required): Valid Draw.io XML content
+  - Must contain valid XML structure with mxfile root element
+  - Will be validated before saving
+- **filename** (string, optional): Custom filename
+  - If not provided, UUID will be generated
+  - Should not include file extension (.drawio will be added automatically)
+
+### Response Format
+
+```json
+{
+  "success": true,
+  "file_id": "uuid-string",
+  "file_path": "/app/temp/uuid.drawio",
+  "expires_at": "2024-01-01T12:00:00Z",
+  "error": null
+}
+```
+
+### Response Fields
+
+- **success** (boolean): Indicates if the operation was successful
+- **file_id** (string): Unique file identifier
+- **file_path** (string): Full path to the saved file
+- **expires_at** (string): ISO timestamp when file will be automatically deleted
+- **error** (string|null): Error message if operation failed
+
+## convert-to-png
+
+Converts Draw.io files to PNG images using Draw.io CLI.
+
+### Tool Schema
+
+```json
+{
+  "name": "convert-to-png",
+  "description": "Convert Draw.io files to PNG images",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "file_id": {
+        "type": "string",
+        "description": "File ID from save-drawio-file (recommended)"
+      },
+      "file_path": {
+        "type": "string", 
+        "description": "Direct file path (alternative to file_id)"
+      }
+    },
+    "anyOf": [
+      {"required": ["file_id"]},
+      {"required": ["file_path"]}
+    ]
+  }
+}
+```
+
+### Parameters
+
+- **file_id** (string, optional): File ID returned from save-drawio-file
+  - Recommended approach for security and validation
+- **file_path** (string, optional): Direct file path
+  - Alternative to file_id for external files
+  - Must be accessible by the server
+
+### Response Format
+
+```json
+{
+  "success": true,
+  "png_file_id": "uuid-string",
+  "png_file_path": "/app/temp/uuid.png",
+  "base64_content": "base64-encoded-image-data",
+  "error": null
+}
+```
+
+### Response Fields
+
+- **success** (boolean): Indicates if the operation was successful
+- **png_file_id** (string): Unique identifier for the generated PNG
+- **png_file_path** (string): Full path to the generated PNG file
+- **base64_content** (string): Base64 encoded PNG image data
+- **error** (string|null): Error message if operation failed
+
+## Error Code Reference
+
+### LLM Service Errors
+
+| Error Code | Description | Typical Cause | Resolution |
+|------------|-------------|---------------|------------|
+| `API_KEY_MISSING` | Claude API key not provided | Missing ANTHROPIC_API_KEY | Set environment variable |
+| `CONNECTION_ERROR` | Network connection failed | Network/DNS issues | Check connectivity |
+| `RATE_LIMIT_ERROR` | API rate limit exceeded | Too many requests | Wait and retry |
+| `QUOTA_EXCEEDED` | API quota exhausted | Monthly/daily limits reached | Upgrade plan or wait |
+| `INVALID_RESPONSE` | Unexpected API response | API changes or malformed request | Check request format |
+| `INVALID_XML` | Generated XML is invalid | AI generation error | Retry with clearer prompt |
+| `TIMEOUT_ERROR` | Request timed out | Slow network or complex request | Retry or simplify prompt |
+| `UNKNOWN_ERROR` | Unexpected error occurred | Various internal issues | Check logs and retry |
+
+### File Service Errors
+
+| Error Code | Description | Typical Cause | Resolution |
+|------------|-------------|---------------|------------|
+| `FILE_NOT_FOUND` | Requested file not found | Invalid file_id or expired file | Check file_id or regenerate |
+| `PERMISSION_DENIED` | File access denied | File system permissions | Check directory permissions |
+| `DISK_FULL` | Insufficient disk space | Storage quota exceeded | Free up space |
+| `INVALID_PATH` | Invalid file path provided | Malformed path or security violation | Use valid file paths |
+
+### Image Service Errors
+
+| Error Code | Description | Typical Cause | Resolution |
+|------------|-------------|---------------|------------|
+| `CLI_NOT_FOUND` | Draw.io CLI not available | Missing installation | Install @drawio/drawio-desktop-cli |
+| `CLI_ERROR` | CLI execution failed | Invalid input or CLI bug | Check input file validity |
+| `CONVERSION_FAILED` | PNG conversion failed | Corrupted input or CLI error | Verify input file |
+
+## Common Response Patterns
+
+### Success Response
+
+All successful operations return:
+```json
+{
+  "success": true,
+  // ... tool-specific data
+  "error": null
+}
+```
+
+### Error Response
+
+All failed operations return:
+```json
+{
+  "success": false,
+  "error": "Human-readable error message",
+  "error_code": "ERROR_CODE_CONSTANT",
+  "details": {
+    "original_error": "Technical details",
+    "timestamp": "2024-01-01T00:00:00Z",
+    // ... additional context
+  }
+}
+```
+
+## Usage Examples
+
+### Basic Workflow
+
+1. **Generate XML from prompt:**
+```json
+{
+  "tool": "generate-drawio-xml",
+  "arguments": {
+    "prompt": "Create a simple flowchart with start, process, decision, and end nodes"
+  }
+}
+```
+
+2. **Save generated XML:**
+```json
+{
+  "tool": "save-drawio-file",
+  "arguments": {
+    "xml_content": "<mxfile>...</mxfile>",
+    "filename": "user-process-flow"
+  }
+}
+```
+
+3. **Convert to PNG:**
+```json
+{
+  "tool": "convert-to-png", 
+  "arguments": {
+    "file_id": "uuid-from-save-operation"
+  }
+}
+```
+
+### AWS Architecture Example
+
+```json
+{
+  "tool": "generate-drawio-xml",
+  "arguments": {
+    "prompt": "AWS 3-tier architecture with Application Load Balancer, Auto Scaling Group with EC2 instances, and RDS database. Include VPC with public and private subnets across two availability zones."
+  }
+}
+```
+
+### Error Handling Example
+
+```json
+{
+  "success": false,
+  "error": "Draw.io CLI not found. Please install @drawio/drawio-desktop-cli",
+  "error_code": "CLI_NOT_FOUND",
+  "details": {
+    "original_error": "Command 'drawio' not found",
+    "timestamp": "2024-01-01T12:00:00Z",
+    "resolution": "Run: npm install -g @drawio/drawio-desktop-cli"
+  }
+}
+```
+
+---
+
 # MCP Draw.io サーバー API ドキュメント
 
 ## 概要
@@ -7,12 +315,12 @@ MCP Draw.io サーバーは、Draw.io 図表の生成、保存、変換を行う
 ## 目次
 
 - [ツール概要](#ツール概要)
-- [generate-drawio-xml](#generate-drawio-xml)
-- [save-drawio-file](#save-drawio-file)
-- [convert-to-png](#convert-to-png)
+- [generate-drawio-xml](#generate-drawio-xml-1)
+- [save-drawio-file](#save-drawio-file-1)
+- [convert-to-png](#convert-to-png-1)
 - [エラーコードリファレンス](#エラーコードリファレンス)
 - [共通レスポンスパターン](#共通レスポンスパターン)
-- [使用例](#使用例)
+- [使用例](#使用例-1)
 
 ## ツール概要
 
@@ -24,7 +332,285 @@ MCP Draw.io サーバーは、Draw.io 図表の生成、保存、変換を行う
 
 ## generate-drawio-xml
 
-Generates Draw.io XML diagram content from natural language descriptions using Claude AI.
+Claude AIを使用して自然言語の説明からDraw.io XMLダイアグラムコンテンツを生成します。
+
+### ツールスキーマ
+
+```json
+{
+  "name": "generate-drawio-xml",
+  "description": "自然言語の説明からDraw.io XMLダイアグラムを生成",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "prompt": {
+        "type": "string",
+        "description": "生成する図表の自然言語記述"
+      }
+    },
+    "required": ["prompt"]
+  }
+}
+```
+
+### パラメータ
+
+- **prompt** (string, 必須): 図表の自然言語記述
+  - 空でない文字列である必要があります
+  - フローチャート、AWSアーキテクチャ、ネットワーク図など、複雑な図表記述をサポート
+  - 例: "ユーザー認証のフローチャートを作成", "ロードバランサー付きAWS 3層アーキテクチャ"
+
+### レスポンス形式
+
+```json
+{
+  "success": true,
+  "xml_content": "<mxfile>...</mxfile>",
+  "error": null
+}
+```
+
+### レスポンスフィールド
+
+- **success** (boolean): 操作が成功したかを示します
+- **xml_content** (string): 生成されたDraw.io XMLコンテンツ（success=trueの場合のみ存在）
+- **error** (string|null): 操作が失敗した場合のエラーメッセージ
+
+## save-drawio-file
+
+一意の識別子と自動クリーンアップ機能付きで、XMLコンテンツを一時ファイルに保存します。
+
+### ツールスキーマ
+
+```json
+{
+  "name": "save-drawio-file", 
+  "description": "Draw.io XMLコンテンツを一時ファイルに保存",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "xml_content": {
+        "type": "string",
+        "description": "有効なDraw.io XMLコンテンツ"
+      },
+      "filename": {
+        "type": "string",
+        "description": "オプションのカスタムファイル名（提供されない場合はUUID生成）"
+      }
+    },
+    "required": ["xml_content"]
+  }
+}
+```
+
+### パラメータ
+
+- **xml_content** (string, 必須): 有効なDraw.io XMLコンテンツ
+  - mxfileルート要素を含む有効なXML構造である必要があります
+  - 保存前に検証されます
+- **filename** (string, オプション): カスタムファイル名
+  - 提供されない場合、UUIDが生成されます
+  - ファイル拡張子は含めないでください（.drawioが自動追加されます）
+
+### レスポンス形式
+
+```json
+{
+  "success": true,
+  "file_id": "uuid-string",
+  "file_path": "/app/temp/uuid.drawio",
+  "expires_at": "2024-01-01T12:00:00Z",
+  "error": null
+}
+```
+
+### レスポンスフィールド
+
+- **success** (boolean): 操作が成功したかを示します
+- **file_id** (string): 一意のファイル識別子
+- **file_path** (string): 保存されたファイルのフルパス
+- **expires_at** (string): ファイルが自動削除されるISOタイムスタンプ
+- **error** (string|null): 操作が失敗した場合のエラーメッセージ
+
+## convert-to-png
+
+Draw.io CLIを使用してDraw.ioファイルをPNG画像に変換します。
+
+### ツールスキーマ
+
+```json
+{
+  "name": "convert-to-png",
+  "description": "Draw.ioファイルをPNG画像に変換",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "file_id": {
+        "type": "string",
+        "description": "save-drawio-fileからのファイルID（推奨）"
+      },
+      "file_path": {
+        "type": "string", 
+        "description": "直接ファイルパス（file_idの代替）"
+      }
+    },
+    "anyOf": [
+      {"required": ["file_id"]},
+      {"required": ["file_path"]}
+    ]
+  }
+}
+```
+
+### パラメータ
+
+- **file_id** (string, オプション): save-drawio-fileから返されたファイルID
+  - セキュリティと検証のため推奨されるアプローチ
+- **file_path** (string, オプション): 直接ファイルパス
+  - 外部ファイル用のfile_idの代替
+  - サーバーからアクセス可能である必要があります
+
+### レスポンス形式
+
+```json
+{
+  "success": true,
+  "png_file_id": "uuid-string",
+  "png_file_path": "/app/temp/uuid.png",
+  "base64_content": "base64-encoded-image-data",
+  "error": null
+}
+```
+
+### レスポンスフィールド
+
+- **success** (boolean): 操作が成功したかを示します
+- **png_file_id** (string): 生成されたPNGの一意識別子
+- **png_file_path** (string): 生成されたPNGファイルのフルパス
+- **base64_content** (string): Base64エンコードされたPNG画像データ
+- **error** (string|null): 操作が失敗した場合のエラーメッセージ
+
+## エラーコードリファレンス
+
+### LLMサービスエラー
+
+| エラーコード | 説明 | 典型的な原因 | 解決方法 |
+|------------|-------------|---------------|------------|
+| `API_KEY_MISSING` | Claude APIキーが提供されていません | ANTHROPIC_API_KEYの欠落 | 環境変数を設定 |
+| `CONNECTION_ERROR` | ネットワーク接続が失敗しました | ネットワーク/DNS問題 | 接続性を確認 |
+| `RATE_LIMIT_ERROR` | APIレート制限を超過しました | リクエスト過多 | 待機して再試行 |
+| `QUOTA_EXCEEDED` | APIクォータが枯渇しました | 月次/日次制限に到達 | プランをアップグレードまたは待機 |
+| `INVALID_RESPONSE` | 予期しないAPIレスポンス | API変更または不正なリクエスト | リクエスト形式を確認 |
+| `INVALID_XML` | 生成されたXMLが無効です | AI生成エラー | より明確なプロンプトで再試行 |
+| `TIMEOUT_ERROR` | リクエストがタイムアウトしました | 低速ネットワークまたは複雑なリクエスト | 再試行またはプロンプトを簡素化 |
+| `UNKNOWN_ERROR` | 予期しないエラーが発生しました | 様々な内部問題 | ログを確認して再試行 |
+
+### ファイルサービスエラー
+
+| エラーコード | 説明 | 典型的な原因 | 解決方法 |
+|------------|-------------|---------------|------------|
+| `FILE_NOT_FOUND` | 要求されたファイルが見つかりません | 無効なfile_idまたは期限切れファイル | file_idを確認または再生成 |
+| `PERMISSION_DENIED` | ファイルアクセスが拒否されました | ファイルシステム権限 | ディレクトリ権限を確認 |
+| `DISK_FULL` | ディスク容量不足 | ストレージクォータ超過 | 容量を解放 |
+| `INVALID_PATH` | 無効なファイルパスが提供されました | 不正な形式のパスまたはセキュリティ違反 | 有効なファイルパスを使用 |
+
+### 画像サービスエラー
+
+| エラーコード | 説明 | 典型的な原因 | 解決方法 |
+|------------|-------------|---------------|------------|
+| `CLI_NOT_FOUND` | Draw.io CLIが利用できません | インストールの欠落 | @drawio/drawio-desktop-cliをインストール |
+| `CLI_ERROR` | CLI実行が失敗しました | 無効な入力またはCLIバグ | 入力ファイルの有効性を確認 |
+| `CONVERSION_FAILED` | PNG変換が失敗しました | 破損した入力またはCLIエラー | 入力ファイルを検証 |
+
+## 共通レスポンスパターン
+
+### 成功レスポンス
+
+すべての成功した操作は以下を返します：
+```json
+{
+  "success": true,
+  // ... ツール固有のデータ
+  "error": null
+}
+```
+
+### エラーレスポンス
+
+すべての失敗した操作は以下を返します：
+```json
+{
+  "success": false,
+  "error": "人間が読める形式のエラーメッセージ",
+  "error_code": "ERROR_CODE_CONSTANT",
+  "details": {
+    "original_error": "技術的詳細",
+    "timestamp": "2024-01-01T00:00:00Z",
+    // ... 追加のコンテキスト
+  }
+}
+```
+
+## 使用例
+
+### 基本ワークフロー
+
+1. **プロンプトからXMLを生成:**
+```json
+{
+  "tool": "generate-drawio-xml",
+  "arguments": {
+    "prompt": "開始、処理、判定、終了ノードを含むシンプルなフローチャートを作成"
+  }
+}
+```
+
+2. **生成されたXMLを保存:**
+```json
+{
+  "tool": "save-drawio-file",
+  "arguments": {
+    "xml_content": "<mxfile>...</mxfile>",
+    "filename": "user-process-flow"
+  }
+}
+```
+
+3. **PNGに変換:**
+```json
+{
+  "tool": "convert-to-png", 
+  "arguments": {
+    "file_id": "uuid-from-save-operation"
+  }
+}
+```
+
+### AWSアーキテクチャの例
+
+```json
+{
+  "tool": "generate-drawio-xml",
+  "arguments": {
+    "prompt": "Application Load Balancer、EC2インスタンスのAuto Scaling Group、RDSデータベースを含むAWS 3層アーキテクチャ。2つのアベイラビリティゾーンにまたがるパブリックおよびプライベートサブネットを持つVPCを含める。"
+  }
+}
+```
+
+### エラーハンドリングの例
+
+```json
+{
+  "success": false,
+  "error": "Draw.io CLIが見つかりません。@drawio/drawio-desktop-cliをインストールしてください",
+  "error_code": "CLI_NOT_FOUND",
+  "details": {
+    "original_error": "Command 'drawio' not found",
+    "timestamp": "2024-01-01T12:00:00Z",
+    "resolution": "実行: npm install -g @drawio/drawio-desktop-cli"
+  }
+}
+```
 
 ### Tool Schema
 
