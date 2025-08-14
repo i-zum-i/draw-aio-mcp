@@ -33,7 +33,7 @@ Claude AIを使用して自然言語の説明からDraw.io図表を生成するM
 
 1. **Docker Composeでビルドと実行:**
 ```bash
-cd mcp-server
+cd mcp-server/build
 docker-compose up --build
 ```
 
@@ -133,9 +133,9 @@ Draw.io CLIを使用してDraw.ioファイルをPNG画像に変換します。
 ```json
 {
   "mcpServers": {
-    "draw-aio-mcp": {
+    "drawio-server": {
       "command": "docker",
-      "args": ["run", "-it", "--rm", "-e", "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}", "draw-aio-mcp:latest"]
+      "args": ["run", "-it", "--rm", "-e", "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}", "mcp-drawio-server:latest"]
     }
   }
 }
@@ -182,7 +182,8 @@ flake8 src/ tests/
 ### Docker開発
 
 ```bash
-# 最適化されたイメージをビルド
+# 最適化されたイメージをビルド（mcp-server/buildディレクトリから）
+cd mcp-server/build
 docker build -f Dockerfile.optimized -t draw-aio-mcp:latest .
 
 # 開発設定で実行
@@ -237,20 +238,28 @@ mcp-server/
 │   ├── integration/              # 統合テスト
 │   ├── container/                # コンテナテスト
 │   └── fixtures/                 # テストデータとユーティリティ
-├── docker/                       # Docker設定
+├── build/                        # ビルドとDocker設定
 │   ├── Dockerfile                # 標準Dockerfile
 │   ├── Dockerfile.optimized      # 本番最適化イメージ
-│   └── docker-compose.*.yml      # 各種デプロイ設定
+│   ├── docker-compose.yml        # 汎用Docker Compose
+│   ├── docker-compose.dev.yml    # 開発設定
+│   ├── docker-compose.prod.yml   # 本番設定
+│   ├── Makefile                  # ビルド自動化
+│   └── deploy/                   # デプロイスクリプト
 ├── docs/                         # ドキュメント
 │   ├── API_DOCUMENTATION.md      # 詳細APIリファレンス
 │   ├── DEVELOPER_GUIDE.md        # 開発ガイドライン
 │   └── INSTALLATION_GUIDE.md     # セットアップ手順
-├── deploy/                       # デプロイスクリプト
-├── monitoring/                   # 監視設定
+├── scripts/                      # ユーティリティスクリプト
+├── infrastructure/               # インフラストラクチャ設定
+│   ├── config/                   # 設定ファイル
+│   ├── examples/                 # 設定例
+│   └── monitoring/               # 監視設定
+├── reports/                      # テストとパフォーマンスレポート
+├── tests-standalone/             # スタンドアロンテストファイル
 ├── pyproject.toml               # プロジェクト設定
 ├── requirements.txt             # 本番依存関係
 ├── requirements-dev.txt         # 開発依存関係
-├── Makefile                     # ビルド自動化
 └── README.md                    # このファイル
 ```
 
@@ -259,7 +268,8 @@ mcp-server/
 ### 本番デプロイ
 
 ```bash
-# 本番イメージをビルド
+# 本番イメージをビルド（mcp-server/buildディレクトリから）
+cd mcp-server/build
 make build-production
 
 # リソース制限付きでデプロイ
@@ -303,7 +313,7 @@ services:
 3. **コンテナメモリの問題:**
    ```bash
    # コンテナメモリを増加
-   docker run -m 1g draw-aio-mcp:latest
+   docker run -m 1g mcp-drawio-server:latest
    ```
 
 ### ヘルスチェック
@@ -318,13 +328,13 @@ services:
 
 ```bash
 # サーバーログを表示
-docker logs mcp-server
+docker logs mcp-drawio-server
 
 # リアルタイムでログを追跡
-docker logs -f mcp-server
+docker logs -f mcp-drawio-server
 
 # エラーログをフィルタ
-docker logs mcp-server 2>&1 | grep ERROR
+docker logs mcp-drawio-server 2>&1 | grep ERROR
 ```
 
 ## 貢献

@@ -33,7 +33,7 @@ The server is designed for seamless integration with Claude Code, providing inst
 
 1. **Build and run with Docker Compose:**
 ```bash
-cd mcp-server
+cd mcp-server/build
 docker-compose up --build
 ```
 
@@ -133,9 +133,9 @@ Convert Draw.io files to PNG images using Draw.io CLI.
 ```json
 {
   "mcpServers": {
-    "draw-aio-mcp": {
+    "drawio-server": {
       "command": "docker",
-      "args": ["run", "-it", "--rm", "-e", "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}", "draw-aio-mcp:latest"]
+      "args": ["run", "-it", "--rm", "-e", "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}", "mcp-drawio-server:latest"]
     }
   }
 }
@@ -182,7 +182,8 @@ flake8 src/ tests/
 ### Docker Development
 
 ```bash
-# Build optimized image
+# Build optimized image (from mcp-server/build directory)
+cd mcp-server/build
 docker build -f Dockerfile.optimized -t draw-aio-mcp:latest .
 
 # Run with development settings
@@ -237,20 +238,28 @@ mcp-server/
 │   ├── integration/              # Integration tests
 │   ├── container/                # Container tests
 │   └── fixtures/                 # Test data and utilities
-├── docker/                       # Docker configuration
+├── build/                        # Build and Docker configuration
 │   ├── Dockerfile                # Standard Dockerfile
 │   ├── Dockerfile.optimized      # Production-optimized image
-│   └── docker-compose.*.yml      # Various deployment configs
+│   ├── docker-compose.yml        # General purpose Docker Compose
+│   ├── docker-compose.dev.yml    # Development configuration
+│   ├── docker-compose.prod.yml   # Production configuration
+│   ├── Makefile                  # Build automation
+│   └── deploy/                   # Deployment scripts
 ├── docs/                         # Documentation
 │   ├── API_DOCUMENTATION.md      # Detailed API reference
 │   ├── DEVELOPER_GUIDE.md        # Development guidelines
 │   └── INSTALLATION_GUIDE.md     # Setup instructions
-├── deploy/                       # Deployment scripts
-├── monitoring/                   # Monitoring configuration
+├── scripts/                      # Utility scripts
+├── infrastructure/               # Infrastructure configuration
+│   ├── config/                   # Configuration files
+│   ├── examples/                 # Example configurations
+│   └── monitoring/               # Monitoring configuration
+├── reports/                      # Test and performance reports
+├── tests-standalone/             # Standalone test files
 ├── pyproject.toml               # Project configuration
 ├── requirements.txt             # Production dependencies
 ├── requirements-dev.txt         # Development dependencies
-├── Makefile                     # Build automation
 └── README.md                    # This file
 ```
 
@@ -259,7 +268,8 @@ mcp-server/
 ### Production Deployment
 
 ```bash
-# Build production image
+# Build production image (from mcp-server/build directory)
+cd mcp-server/build
 make build-production
 
 # Deploy with resource limits
@@ -303,7 +313,7 @@ services:
 3. **Container memory issues:**
    ```bash
    # Increase container memory
-   docker run -m 1g draw-aio-mcp:latest
+   docker run -m 1g mcp-drawio-server:latest
    ```
 
 ### Health Checks
@@ -318,13 +328,13 @@ The server provides comprehensive health monitoring:
 
 ```bash
 # View server logs
-docker logs mcp-server
+docker logs mcp-drawio-server
 
 # Follow logs in real-time
-docker logs -f mcp-server
+docker logs -f mcp-drawio-server
 
 # Filter error logs
-docker logs mcp-server 2>&1 | grep ERROR
+docker logs mcp-drawio-server 2>&1 | grep ERROR
 ```
 
 ## Contributing
