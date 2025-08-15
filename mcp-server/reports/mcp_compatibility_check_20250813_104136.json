@@ -1,0 +1,78 @@
+{
+  "timestamp": "2025-08-13T10:41:36.761927",
+  "server_info": {
+    "name": "drawio-mcp-server",
+    "version": "1.0.0"
+  },
+  "test_results": {
+    "protocol_version": {
+      "server_version": "2025-06-18",
+      "official_latest": "2025-06-18",
+      "official_default": "2025-03-26",
+      "is_latest": true,
+      "is_supported": true,
+      "format_valid": true,
+      "score": 100,
+      "success": true
+    },
+    "server_capabilities": {
+      "checks": {
+        "server_name_defined": true,
+        "server_version_defined": true,
+        "tools_defined": true,
+        "tool_schemas_valid": true
+      },
+      "score": 100.0,
+      "success": true
+    },
+    "tool_definitions": {
+      "checks": {
+        "error": true
+      },
+      "error": "'NoneType' object has no attribute 'debug'",
+      "score": 0,
+      "success": false
+    },
+    "error_handling": {
+      "error_tests": [
+        {
+          "tool": "generate-drawio-xml",
+          "error_caught": true,
+          "expected": "必須パラメータ 'prompt' が不足しています",
+          "actual": "必須パラメータ 'prompt' が不足しています",
+          "message_correct": true
+        },
+        {
+          "tool": "save-drawio-file",
+          "error_caught": true,
+          "expected": "必須パラメータ 'xml_content' が不足しています",
+          "actual": "必須パラメータ 'xml_content' が不足しています",
+          "message_correct": true
+        },
+        {
+          "tool": "convert-to-png",
+          "error_caught": true,
+          "expected": "'file_id' または 'file_path' のいずれかが必要です",
+          "actual": "'file_id' または 'file_path' のいずれかが必要です",
+          "message_correct": true
+        }
+      ],
+      "all_errors_caught": true,
+      "correct_messages": true,
+      "score": 100.0,
+      "success": true
+    }
+  },
+  "overall_assessment": {
+    "total_score": 75.0,
+    "level": "ACCEPTABLE",
+    "message": "⚠️ MCP仕様に概ね準拠していますが、改善の余地があります",
+    "success": false,
+    "category_scores": {
+      "protocol_version": 100,
+      "server_capabilities": 100.0,
+      "tool_definitions": 0,
+      "error_handling": 100.0
+    }
+  }
+}

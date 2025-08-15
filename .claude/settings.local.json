@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(ls:*)",
+      "Bash(pip3 list:*)",
+      "Bash(pip3 show:*)",
+      "Bash(source:*)",
+      "Bash(echo:*)",
+      "Bash(pip3 install:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(true)",
+      "Bash(docker:*)",
+      "Bash(cat:*)",
+      "Bash(rm:*)"
+    ],
+    "deny": []
+  }
+}
